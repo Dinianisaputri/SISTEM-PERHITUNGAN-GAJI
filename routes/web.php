@@ -5,21 +5,90 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ChecklogController;
 use App\Http\Controllers\SalaryArchiveController;
-use App\Http\Controllers\BoronganEmployeeController;
+use App\Http\Controllers\AdmsController;
+use App\Http\Controllers\EmployeeController;
+use App\Http\Controllers\AttendanceLogController;
+use App\Http\Controllers\RegulationController;
+    use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\SalaryDashboardController;
+use App\Http\Controllers\DailySalaryController;
+/*
+|--------------------------------------------------------------------------
+| Halaman Utama
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Dashboard
+/*
+|--------------------------------------------------------------------------
+| Dashboard
+|--------------------------------------------------------------------------
+*/
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard');
 
-// Semua fitur sistem harus login
+/*
+|--------------------------------------------------------------------------
+| Semua Fitur Sistem
+|--------------------------------------------------------------------------
+*/
+
 Route::middleware('auth')->group(function () {
 
-    // Hitung Gaji
+    /*
+    |--------------------------------------------------------------------------
+    | Data Karyawan
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/data-karyawan', [EmployeeController::class, 'dashboard'])
+        ->name('employees.dashboard');
+
+    Route::resource('employees', EmployeeController::class);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Data Fingerprint
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/data-fingerprint', [AttendanceLogController::class, 'index'])
+        ->name('attendance.index');
+
+    Route::get('/data-fingerprint/belum-terdaftar', [AttendanceController::class, 'unregistered'])
+    ->name('attendance.unregistered');
+    /*
+    |--------------------------------------------------------------------------
+    | Regulasi
+    |--------------------------------------------------------------------------
+    */
+
+    // Dashboard Regulasi
+    Route::get('/regulations/dashboard',
+        [RegulationController::class, 'dashboard']
+    )->name('regulations.dashboard');
+
+    // Download Dokumen Regulasi
+    Route::get('/regulations/{regulation}/download',
+        [RegulationController::class, 'download']
+    )->name('regulations.download');
+
+    // CRUD Regulasi
+    Route::resource('regulations', RegulationController::class);
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Gaji Karyawan - Hitung Gaji
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('/hitung-gaji', [ChecklogController::class, 'index'])
         ->name('checklogs.index');
 
@@ -33,27 +102,12 @@ Route::middleware('auth')->group(function () {
         ->name('checklogs.simpanArsip');
 
 
-    // Data Karyawan
-    Route::get('/data-karyawan', [BoronganEmployeeController::class, 'index'])
-        ->name('employees.index');
+    /*
+    |--------------------------------------------------------------------------
+    | Gaji Karyawan - Arsip Gaji
+    |--------------------------------------------------------------------------
+    */
 
-    Route::get('/data-karyawan/tambah', [BoronganEmployeeController::class, 'create'])
-        ->name('employees.create');
-
-    Route::post('/data-karyawan', [BoronganEmployeeController::class, 'store'])
-        ->name('employees.store');
-
-    Route::get('/data-karyawan/{employee}/edit', [BoronganEmployeeController::class, 'edit'])
-        ->name('employees.edit');
-
-    Route::put('/data-karyawan/{employee}', [BoronganEmployeeController::class, 'update'])
-        ->name('employees.update');
-
-    Route::delete('/data-karyawan/{employee}', [BoronganEmployeeController::class, 'destroy'])
-        ->name('employees.destroy');
-
-
-    // Arsip Gaji
     Route::get('/arsip-gaji', [SalaryArchiveController::class, 'index'])
         ->name('salary_archives.index');
 
@@ -79,7 +133,12 @@ Route::middleware('auth')->group(function () {
     )->name('salary_archives.destroyChecklog');
 
 
-    // Profile
+    /*
+    |--------------------------------------------------------------------------
+    | Profile
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
 
@@ -88,6 +147,49 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/profile', [ProfileController::class, 'destroy'])
         ->name('profile.destroy');
+
 });
 
-require __DIR__.'/auth.php';
+
+/*
+|--------------------------------------------------------------------------
+| ADMS Fingerprint Machine
+|--------------------------------------------------------------------------
+|
+| Route ini tidak memakai middleware auth karena
+| mesin fingerprint harus bisa mengirim data langsung.
+|
+*/
+
+Route::get('/iclock/cdata', [AdmsController::class, 'cdataGet']);
+
+Route::post('/iclock/cdata', [AdmsController::class, 'cdataPost']);
+
+Route::get('/iclock/getrequest', [AdmsController::class, 'getRequest']);
+
+Route::post('/iclock/devicecmd', [AdmsController::class, 'deviceCmd']);
+
+Route::get('/iclock/registry', [AdmsController::class, 'registry']);
+
+
+/*
+|--------------------------------------------------------------------------
+| Test Attendance
+|--------------------------------------------------------------------------
+*/
+
+Route::get(
+    '/attendance-test',
+    [App\Http\Controllers\AttendanceController::class, 'index']
+);
+
+
+require __DIR__ . '/auth.php';
+Route::get('/gaji-karyawan', [SalaryDashboardController::class, 'index'])
+    ->name('salary.dashboard');
+
+Route::get('/gaji-harian', [DailySalaryController::class, 'index'])
+    ->name('daily_salaries.index');
+
+Route::post('/gaji-harian', [DailySalaryController::class, 'store'])
+    ->name('daily_salaries.store');

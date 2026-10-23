@@ -2,20 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class BoronganEmployee extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'no_id',
         'nik',
         'name',
         'bagian',
     ];
-
-    public function checklogs(): HasMany
-    {
-        return $this->hasMany(Checklog::class);
-    }
 }

@@ -4,265 +4,291 @@
 
 @section('content')
 
-<div style="
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-">
+<div class="space-y-6">
 
+    {{-- HEADER --}}
     <div>
-        <h1 class="page-title">
+        <p class="text-sm font-medium text-blue-600">
+            GAJI KARYAWAN
+        </p>
+
+        <h1 class="mt-1 text-2xl font-bold text-slate-800">
             Hitung Gaji
         </h1>
 
-        <p class="page-description" style="margin-bottom: 0;">
+        <p class="mt-1 text-sm text-slate-500">
             Hitung gaji karyawan borongan berdasarkan data fingerprint.
         </p>
     </div>
 
-</div>
 
+    {{-- ============================= --}}
+    {{-- IMPORT DATA FINGERPRINT --}}
+    {{-- ============================= --}}
 
-{{-- ============================= --}}
-{{-- IMPORT DATA FINGERPRINT --}}
-{{-- ============================= --}}
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 
-<div class="card">
+        <div class="mb-5">
+            <h2 class="text-lg font-semibold text-slate-800">
+                Import Data Fingerprint
+            </h2>
 
-    <h3 style="
-        margin-top: 0;
-        margin-bottom: 20px;
-    ">
-        Import Data Fingerprint
-    </h3>
-
-    <form
-        action="{{ route('checklogs.import') }}"
-        method="POST"
-        enctype="multipart/form-data"
-    >
-
-        @csrf
-
-        <div style="
-            display: grid;
-            grid-template-columns: 1fr 1fr 2fr auto;
-            gap: 15px;
-            align-items: end;
-        ">
-
-            <div class="form-group" style="margin-bottom: 0;">
-
-                <label for="tanggal_mulai">
-                    Tanggal Mulai
-                </label>
-
-                <input
-                    type="date"
-                    id="tanggal_mulai"
-                    name="tanggal_mulai"
-                    value="{{ old('tanggal_mulai') }}"
-                    required
-                >
-
-            </div>
-
-
-            <div class="form-group" style="margin-bottom: 0;">
-
-                <label for="tanggal_selesai">
-                    Tanggal Selesai
-                </label>
-
-                <input
-                    type="date"
-                    id="tanggal_selesai"
-                    name="tanggal_selesai"
-                    value="{{ old('tanggal_selesai') }}"
-                    required
-                >
-
-            </div>
-
-
-            <div class="form-group" style="margin-bottom: 0;">
-
-                <label for="file">
-                    File Fingerprint
-                </label>
-
-                <input
-                    type="file"
-                    id="file"
-                    name="file"
-                    accept=".xlsx,.xls"
-                    required
-                >
-
-            </div>
-
-
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
-                Import Excel
-            </button>
-
+            <p class="mt-1 text-sm text-slate-500">
+                Masukkan periode dan file fingerprint untuk memuat data checklog.
+            </p>
         </div>
 
-    </form>
+        <form
+            action="{{ route('checklogs.import') }}"
+            method="POST"
+            enctype="multipart/form-data"
+        >
 
-</div>
+            @csrf
 
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 
-{{-- ============================= --}}
-{{-- FILTER DATA --}}
-{{-- ============================= --}}
+                {{-- TANGGAL MULAI --}}
+                <div>
+                    <label
+                        for="tanggal_mulai"
+                        class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                        Tanggal Mulai
+                    </label>
 
-@if($checklogs->count())
-
-<div class="card">
-
-    <h3 style="
-        margin-top: 0;
-        margin-bottom: 20px;
-    ">
-        Filter Data
-    </h3>
-
-    <form
-        action="{{ route('checklogs.index') }}"
-        method="GET"
-    >
-
-        <div style="
-            display: grid;
-            grid-template-columns: 1fr 1fr 2fr auto auto;
-            gap: 15px;
-            align-items: end;
-        ">
+                    <input
+                        type="date"
+                        id="tanggal_mulai"
+                        name="tanggal_mulai"
+                        value="{{ old('tanggal_mulai') }}"
+                        required
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
 
 
-            {{-- Dari Tanggal --}}
+                {{-- TANGGAL SELESAI --}}
+                <div>
+                    <label
+                        for="tanggal_selesai"
+                        class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                        Tanggal Selesai
+                    </label>
 
-            <div class="form-group" style="margin-bottom: 0;">
-
-                <label for="filter_tanggal_mulai">
-                    Dari Tanggal
-                </label>
-
-                <input
-                    type="date"
-                    id="filter_tanggal_mulai"
-                    name="filter_tanggal_mulai"
-                    value="{{ request('filter_tanggal_mulai') }}"
-                >
-
-            </div>
-
-
-            {{-- Sampai Tanggal --}}
-
-            <div class="form-group" style="margin-bottom: 0;">
-
-                <label for="filter_tanggal_selesai">
-                    Sampai Tanggal
-                </label>
-
-                <input
-                    type="date"
-                    id="filter_tanggal_selesai"
-                    name="filter_tanggal_selesai"
-                    value="{{ request('filter_tanggal_selesai') }}"
-                >
-
-            </div>
+                    <input
+                        type="date"
+                        id="tanggal_selesai"
+                        name="tanggal_selesai"
+                        value="{{ old('tanggal_selesai') }}"
+                        required
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
 
 
-            {{-- Nama Karyawan --}}
+                {{-- FILE --}}
+                <div>
+                    <label
+                        for="file"
+                        class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                        File Fingerprint
+                    </label>
 
-            <div class="form-group" style="margin-bottom: 0;">
+                    <input
+                        type="file"
+                        id="file"
+                        name="file"
+                        accept=".xlsx,.xls"
+                        required
+                        class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-600 outline-none transition file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-blue-700 hover:file:bg-blue-100 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
 
-                <label for="nama_karyawan">
-                    Nama Karyawan
-                </label>
 
-                <input
-                    type="text"
-                    id="nama_karyawan"
-                    name="nama_karyawan"
-                    value="{{ request('nama_karyawan') }}"
-                    placeholder="Cari nama karyawan..."
-                >
+                {{-- BUTTON --}}
+                <div class="flex items-end">
+                    <button
+                        type="submit"
+                        class="w-full rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    >
+                        Import Excel
+                    </button>
+                </div>
 
             </div>
 
+        </form>
 
-            {{-- Cari --}}
-
-            <button
-                type="submit"
-                class="btn btn-primary"
-            >
-                Cari
-            </button>
+    </div>
 
 
-            {{-- Reset --}}
+    {{-- ============================= --}}
+    {{-- FILTER DATA --}}
+    {{-- ============================= --}}
 
-            <a
-                href="{{ route('checklogs.index') }}"
-                class="btn btn-secondary"
-            >
-                Reset
-            </a>
+    @if($checklogs->count())
 
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+        <div class="mb-5">
+            <h2 class="text-lg font-semibold text-slate-800">
+                Filter Data
+            </h2>
+
+            <p class="mt-1 text-sm text-slate-500">
+                Gunakan filter untuk menampilkan data checklog tertentu.
+            </p>
         </div>
 
-    </form>
+        <form
+            action="{{ route('checklogs.index') }}"
+            method="GET"
+        >
 
-</div>
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
 
-@endif
+                {{-- DARI TANGGAL --}}
+                <div>
+                    <label
+                        for="filter_tanggal_mulai"
+                        class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                        Dari Tanggal
+                    </label>
+
+                    <input
+                        type="date"
+                        id="filter_tanggal_mulai"
+                        name="filter_tanggal_mulai"
+                        value="{{ request('filter_tanggal_mulai') }}"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
 
 
-{{-- ============================= --}}
-{{-- DATA CHECKLOG --}}
-{{-- ============================= --}}
+                {{-- SAMPAI TANGGAL --}}
+                <div>
+                    <label
+                        for="filter_tanggal_selesai"
+                        class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                        Sampai Tanggal
+                    </label>
 
-<div class="card">
+                    <input
+                        type="date"
+                        id="filter_tanggal_selesai"
+                        name="filter_tanggal_selesai"
+                        value="{{ request('filter_tanggal_selesai') }}"
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
 
-    <div style="
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    ">
 
-        <div>
+                {{-- NAMA --}}
+                <div class="md:col-span-2 xl:col-span-1">
+                    <label
+                        for="nama_karyawan"
+                        class="mb-2 block text-sm font-medium text-slate-700"
+                    >
+                        Nama Karyawan
+                    </label>
 
-            <h3 style="
-                margin: 0 0 5px;
-            ">
-                Data Checklog
-            </h3>
+                    <input
+                        type="text"
+                        id="nama_karyawan"
+                        name="nama_karyawan"
+                        value="{{ request('nama_karyawan') }}"
+                        placeholder="Cari nama karyawan..."
+                        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+                </div>
 
-            @if($tanggalMulai && $tanggalSelesai)
 
-                <div style="
-                    color: #6b7280;
-                    font-size: 13px;
-                ">
+                {{-- CARI --}}
+                <div class="flex items-end">
+                    <button
+                        type="submit"
+                        class="w-full rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    >
+                        Cari
+                    </button>
+                </div>
 
-                    Periode:
 
-                    {{ \Carbon\Carbon::parse($tanggalMulai)->format('d-m-Y') }}
+                {{-- RESET --}}
+                <div class="flex items-end">
+                    <a
+                        href="{{ route('checklogs.index') }}"
+                        class="flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                        Reset
+                    </a>
+                </div>
 
-                    s/d
+            </div>
 
-                    {{ \Carbon\Carbon::parse($tanggalSelesai)->format('d-m-Y') }}
+        </form>
+
+    </div>
+
+    @endif
+
+
+    {{-- ============================= --}}
+    {{-- DATA CHECKLOG --}}
+    {{-- ============================= --}}
+
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+        {{-- HEADER TABLE --}}
+        <div class="flex flex-col gap-3 border-b border-slate-200 p-6 sm:flex-row sm:items-center sm:justify-between">
+
+            <div>
+
+                <h2 class="text-lg font-semibold text-slate-800">
+                    Data Checklog
+                </h2>
+
+                @if($tanggalMulai && $tanggalSelesai)
+
+                    <p class="mt-1 text-sm text-slate-500">
+
+                        Periode:
+
+                        <span class="font-medium text-slate-700">
+                            {{ \Carbon\Carbon::parse($tanggalMulai)->format('d-m-Y') }}
+                        </span>
+
+                        <span class="mx-1">
+                            s/d
+                        </span>
+
+                        <span class="font-medium text-slate-700">
+                            {{ \Carbon\Carbon::parse($tanggalSelesai)->format('d-m-Y') }}
+                        </span>
+
+                    </p>
+
+                @endif
+
+            </div>
+
+
+            @if($checklogs->count())
+
+                <div class="rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-500">
+
+                    Menampilkan
+
+                    <span class="font-semibold text-slate-700">
+                        {{ $checklogs->count() }}
+                    </span>
+
+                    data
 
                 </div>
 
@@ -273,250 +299,267 @@
 
         @if($checklogs->count())
 
-            <div style="
-                font-size: 13px;
-                color: #6b7280;
-            ">
+            {{-- ============================= --}}
+            {{-- FORM HITUNG SEMUA --}}
+            {{-- ============================= --}}
 
-                Menampilkan
+            <form
+                action="{{ route('checklogs.hitungSemua') }}"
+                method="POST"
+            >
 
-                <strong>
-                    {{ $checklogs->count() }}
-                </strong>
+                @csrf
 
-                data
+                {{-- TABLE SCROLL --}}
+                <div class="w-full overflow-x-auto">
+
+                    <table class="min-w-[1200px] w-full text-left text-sm">
+
+                        <thead class="border-b border-slate-200 bg-slate-50">
+
+                            <tr>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    No
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    No. ID
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Nama Karyawan
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Tanggal
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Jam Masuk
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Jam Pulang
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Scan Masuk
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Scan Pulang
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Istirahat
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Total Jam Kerja
+                                </th>
+
+                                <th class="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
+                                    Gaji
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+
+                        <tbody class="divide-y divide-slate-100">
+
+                            @foreach($checklogs as $checklog)
+
+                                <tr class="transition hover:bg-slate-50">
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-slate-500">
+                                        {{ $loop->iteration }}
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-700">
+                                        {{ $checklog->employee->no_id }}
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-800">
+                                        {{ $checklog->employee->name }}
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                        {{ $checklog->tanggal->format('d-m-Y') }}
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                        {{ $checklog->jam_masuk ?? '-' }}
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                        {{ $checklog->jam_pulang ?? '-' }}
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                        {{ $checklog->scan_masuk ?? '-' }}
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                        {{ $checklog->scan_pulang ?? '-' }}
+                                    </td>
+
+
+                                    <td class="px-4 py-3">
+
+                                        <input
+                                            type="text"
+                                            name="istirahat[{{ $checklog->id }}]"
+                                            value="{{ $checklog->jam_istirahat ?? '0.00' }}"
+                                            placeholder="0.00"
+                                            class="w-20 rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-center text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                        >
+
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 text-slate-700">
+
+                                        {{ number_format(
+                                            (float) $checklog->total_jam_kerja,
+                                            2,
+                                            ',',
+                                            '.'
+                                        ) }}
+
+                                        jam
+
+                                    </td>
+
+
+                                    <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-800">
+
+                                        Rp
+
+                                        {{ number_format(
+                                            (float) $checklog->gaji,
+                                            0,
+                                            ',',
+                                            '.'
+                                        ) }}
+
+                                    </td>
+
+                                </tr>
+
+                            @endforeach
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                {{-- TOMBOL HITUNG --}}
+                <div class="flex flex-col gap-3 border-t border-slate-200 p-5 sm:flex-row">
+
+                    <button
+                        type="submit"
+                        class="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-200"
+                    >
+                        Hitung Semua
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            {{-- ============================= --}}
+            {{-- SIMPAN ARSIP --}}
+            {{-- ============================= --}}
+
+            @if($tanggalMulai && $tanggalSelesai)
+
+                <form
+                    action="{{ route('checklogs.simpanArsip') }}"
+                    method="POST"
+                    class="border-t border-slate-200"
+                >
+
+                    @csrf
+
+                    <input
+                        type="hidden"
+                        name="tanggal_mulai"
+                        value="{{ \Carbon\Carbon::parse($tanggalMulai)->format('Y-m-d') }}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="tanggal_selesai"
+                        value="{{ \Carbon\Carbon::parse($tanggalSelesai)->format('Y-m-d') }}"
+                    >
+
+                    <div class="p-5">
+
+                        <button
+                            type="submit"
+                            class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                            onclick="return confirm('Simpan semua data gaji pada periode ini ke arsip?')"
+                        >
+                            Simpan Arsip Gaji
+                        </button>
+
+                    </div>
+
+                </form>
+
+            @endif
+
+
+        @else
+
+            {{-- DATA KOSONG --}}
+            <div class="flex flex-col items-center justify-center px-6 py-16 text-center">
+
+                <div class="flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-7 w-7"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M20 13V7a2 2 0 00-2-2h-3.5l-1-1h-3l-1 1H6a2 2 0 00-2 2v6m16 0v4a2 2 0 01-2 2H6a2 2 0 01-2-2v-4m16 0H4"
+                        />
+                    </svg>
+
+                </div>
+
+                <h3 class="mt-4 text-base font-semibold text-slate-700">
+                    Data tidak ditemukan
+                </h3>
+
+                <p class="mt-1 max-w-md text-sm text-slate-500">
+                    Silakan ubah filter atau import file fingerprint terlebih dahulu.
+                </p>
 
             </div>
 
         @endif
 
     </div>
-
-
-    @if($checklogs->count())
-
-
-    {{-- ============================= --}}
-    {{-- FORM HITUNG SEMUA --}}
-    {{-- ============================= --}}
-
-    <form
-        action="{{ route('checklogs.hitungSemua') }}"
-        method="POST"
-    >
-
-        @csrf
-
-        <div class="table-wrapper">
-
-            <table>
-
-                <thead>
-
-                    <tr>
-
-                        <th>No</th>
-                        <th>No. ID</th>
-                        <th>Nama Karyawan</th>
-                        <th>Tanggal</th>
-                        <th>Jam Masuk</th>
-                        <th>Jam Pulang</th>
-                        <th>Scan Masuk</th>
-                        <th>Scan Pulang</th>
-                        <th>Istirahat</th>
-                        <th>Total Jam Kerja</th>
-                        <th>Gaji</th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    @foreach($checklogs as $checklog)
-
-                    <tr>
-
-                        <td>
-                            {{ $loop->iteration }}
-                        </td>
-
-
-                        <td>
-                            {{ $checklog->employee->no_id }}
-                        </td>
-
-
-                        <td style="text-align: left;">
-                            {{ $checklog->employee->name }}
-                        </td>
-
-
-                        <td>
-                            {{ $checklog->tanggal->format('d-m-Y') }}
-                        </td>
-
-
-                        <td>
-                            {{ $checklog->jam_masuk ?? '-' }}
-                        </td>
-
-
-                        <td>
-                            {{ $checklog->jam_pulang ?? '-' }}
-                        </td>
-
-
-                        <td>
-                            {{ $checklog->scan_masuk ?? '-' }}
-                        </td>
-
-
-                        <td>
-                            {{ $checklog->scan_pulang ?? '-' }}
-                        </td>
-
-
-                        <td>
-
-                            <input
-                                type="text"
-                                name="istirahat[{{ $checklog->id }}]"
-                                value="{{ $checklog->jam_istirahat ?? '0.00' }}"
-                                placeholder="0.00"
-                                style="
-                                    width: 80px;
-                                    text-align: center;
-                                "
-                            >
-
-                        </td>
-
-
-                        <td>
-
-                            {{ number_format(
-                                (float) $checklog->total_jam_kerja,
-                                2,
-                                ',',
-                                '.'
-                            ) }}
-
-                            jam
-
-                        </td>
-
-
-                        <td>
-
-                            Rp
-
-                            {{ number_format(
-                                (float) $checklog->gaji,
-                                0,
-                                ',',
-                                '.'
-                            ) }}
-
-                        </td>
-
-                    </tr>
-
-                    @endforeach
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-
-        {{-- Tombol Hitung Semua --}}
-
-        <div style="
-            margin-top: 20px;
-        ">
-
-            <button
-                type="submit"
-                class="btn btn-success"
-            >
-                Hitung Semua
-            </button>
-
-        </div>
-
-    </form>
-
-
-    {{-- ============================= --}}
-    {{-- SIMPAN ARSIP --}}
-    {{-- ============================= --}}
-
-    @if($tanggalMulai && $tanggalSelesai)
-
-    <form
-        action="{{ route('checklogs.simpanArsip') }}"
-        method="POST"
-        style="
-            margin-top: 10px;
-        "
-    >
-
-        @csrf
-
-        {{-- Periode asli data yang belum diarsipkan --}}
-
-        <input
-            type="hidden"
-            name="tanggal_mulai"
-            value="{{ \Carbon\Carbon::parse($tanggalMulai)->format('Y-m-d') }}"
-        >
-
-        <input
-            type="hidden"
-            name="tanggal_selesai"
-            value="{{ \Carbon\Carbon::parse($tanggalSelesai)->format('Y-m-d') }}"
-        >
-
-
-        <button
-            type="submit"
-            class="btn btn-primary"
-            onclick="return confirm('Simpan semua data gaji pada periode ini ke arsip?')"
-        >
-            Simpan Arsip Gaji
-        </button>
-
-    </form>
-
-    @endif
-
-
-    @else
-
-    <div style="
-        text-align: center;
-        padding: 50px 20px;
-        color: #6b7280;
-    ">
-
-        <div style="
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 8px;
-        ">
-            Data tidak ditemukan
-        </div>
-
-        <div>
-            Silakan ubah filter atau import file fingerprint terlebih dahulu.
-        </div>
-
-    </div>
-
-    @endif
 
 </div>
 

@@ -3,100 +3,48 @@
 @section('title', 'Dashboard')
 
 @section('content')
+    <div class="space-y-6">
+        <div class="soft-card p-6">
+            <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <span class="mini-tag">Dashboard Utama</span>
+                    <h1 class="mt-3 text-3xl font-bold text-slate-800">Dashboard</h1>
+                    <p class="mt-1 text-sm text-slate-500">Ringkasan data perhitungan gaji karyawan borongan.</p>
+                </div>
+            </div>
+        </div>
 
-    <div>
-        <h1 class="page-title">
-            Dashboard
-        </h1>
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="soft-card p-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Karyawan</p>
+                <div class="mt-4 text-3xl font-bold text-blue-700">{{ $totalKaryawan }}</div>
+                <p class="mt-2 text-sm text-slate-500">Orang</p>
+            </div>
 
-        <p class="page-description">
-            Ringkasan data perhitungan gaji karyawan borongan.
-        </p>
+            <div class="soft-card p-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Checklog</p>
+                <div class="mt-4 text-3xl font-bold text-blue-700">{{ $totalChecklog }}</div>
+                <p class="mt-2 text-sm text-slate-500">Data kehadiran</p>
+            </div>
+
+            <div class="soft-card p-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Arsip Gaji</p>
+                <div class="mt-4 text-3xl font-bold text-blue-700">{{ $totalArsip }}</div>
+                <p class="mt-2 text-sm text-slate-500">Arsip</p>
+            </div>
+
+            <div class="soft-card p-5">
+                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Total Gaji</p>
+                <div class="mt-4 text-2xl font-bold text-blue-700">Rp {{ number_format((float) $totalGaji, 0, ',', '.') }}</div>
+                <p class="mt-2 text-sm text-slate-500">Total seluruh arsip</p>
+            </div>
+        </div>
+
+        <div class="soft-card p-6">
+            <h3 class="text-xl font-bold text-slate-800">Sistem Perhitungan Gaji Borongan</h3>
+            <p class="mt-3 text-sm leading-7 text-slate-600">
+                Sistem digunakan untuk mengelola data karyawan borongan, mengimpor data fingerprint, menghitung jam kerja berdasarkan waktu scan masuk dan scan pulang, serta mengarsipkan hasil perhitungan gaji.
+            </p>
+        </div>
     </div>
-
-
-    <div class="stats">
-
-        <div class="stat-card">
-            <div class="stat-title">
-                Total Karyawan Borongan
-            </div>
-
-            <div class="stat-value">
-                {{ $totalKaryawan }}
-            </div>
-
-            <div style="margin-top: 5px; color: #6b7280; font-size: 12px;">
-                Orang
-            </div>
-        </div>
-
-
-        <div class="stat-card">
-            <div class="stat-title">
-                Total Checklog
-            </div>
-
-            <div class="stat-value">
-                {{ $totalChecklog }}
-            </div>
-
-            <div style="margin-top: 5px; color: #6b7280; font-size: 12px;">
-                Data kehadiran
-            </div>
-        </div>
-
-
-        <div class="stat-card">
-            <div class="stat-title">
-                Total Arsip Gaji
-            </div>
-
-            <div class="stat-value">
-                {{ $totalArsip }}
-            </div>
-
-            <div style="margin-top: 5px; color: #6b7280; font-size: 12px;">
-                Arsip
-            </div>
-        </div>
-
-
-        <div class="stat-card">
-            <div class="stat-title">
-                Total Gaji
-            </div>
-
-            <div class="stat-value" style="font-size: 21px;">
-                Rp {{ number_format((float) $totalGaji, 0, ',', '.') }}
-            </div>
-
-            <div style="margin-top: 5px; color: #6b7280; font-size: 12px;">
-                Total seluruh arsip
-            </div>
-        </div>
-
-    </div>
-
-
-    <div class="card">
-
-        <h3 style="margin-top: 0; margin-bottom: 10px;">
-            Sistem Perhitungan Gaji Borongan
-        </h3>
-
-        <p style="
-            margin: 0;
-            color: #6b7280;
-            font-size: 14px;
-            line-height: 1.7;
-        ">
-            Sistem digunakan untuk mengelola data karyawan borongan,
-            mengimpor data fingerprint, menghitung jam kerja berdasarkan
-            waktu scan masuk dan scan pulang, serta mengarsipkan hasil
-            perhitungan gaji.
-        </p>
-
-    </div>
-
 @endsection
