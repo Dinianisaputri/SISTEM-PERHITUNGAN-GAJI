@@ -12,40 +12,21 @@
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans antialiased bg-slate-100 text-slate-900">
-        <div class="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_#eff6ff_0%,_#dbeafe_28%,_#e2e8f0_100%)] p-4 sm:p-6">
-            <div class="w-full max-w-4xl overflow-hidden rounded-[28px] border border-blue-100 bg-white shadow-[0_30px_80px_rgba(37,99,235,0.12)]">
-                <div class="grid md:grid-cols-[1.05fr_0.95fr]">
-                    <div class="hidden md:flex flex-col justify-between bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 p-10 text-white">
-                        <div>
-                            <div class="mb-8 flex items-center gap-3">
-                                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-lg font-bold shadow-lg shadow-blue-900/20 backdrop-blur-sm">
-                                    PG
-                                </div>
-                                <div>
-                                    <div class="text-[10px] font-semibold uppercase tracking-[0.25em] text-blue-100">Payroll System</div>
-                                    <div class="text-2xl font-bold">Perhitungan Gaji</div>
-                                </div>
-                            </div>
-
-                            <div class="space-y-5">
-                                <p class="text-sm uppercase tracking-[0.3em] text-blue-100/80">Dashboard</p>
-                                <h1 class="text-4xl font-bold leading-tight">Kelola penggajian dengan lebih cepat dan rapi.</h1>
-                            </div>
-                        </div>
-
-                        <div class="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm">
-                            <p class="text-sm text-blue-100">Semua kebutuhan absensi, payroll, dan rekap gaji dalam satu sistem.</p>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-center p-6 sm:p-10">
-                        <div class="w-full max-w-md">
-                            {{ $slot }}
-                        </div>
+    <body class="min-h-screen bg-slate-50 font-sans antialiased text-slate-900">
+        <main class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6">
+            <div class="w-full max-w-md">
+                <div class="mb-6 flex items-center justify-center gap-3">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-700 text-xs font-bold tracking-wide text-white">PG</span>
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">Sistem HRD</p>
+                        <p class="text-xs text-slate-500">Starfood International</p>
                     </div>
                 </div>
+                <section class="rounded-xl border border-slate-200 border-t-2 border-t-emerald-700 bg-white p-6 shadow-sm sm:p-8">
+                    {{ $slot }}
+                </section>
+                <p class="mt-5 text-center text-xs text-slate-400">Sistem pengelolaan karyawan dan penggajian</p>
             </div>
-        </div>
+        </main>
     </body>
 </html>

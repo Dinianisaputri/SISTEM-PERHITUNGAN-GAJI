@@ -1,0 +1,14 @@
+
+
+Filename::C:\xampp\mysql\data\gaji_khl_recovery\employees.ibd
+==============================================================================
+	PAGE_NO		|		PAGE_TYPE			|	EXTRA INFO
+==============================================================================
+#::0		|		File Space Header		|	-
+#::1		|		Insert Buffer Bitmap		|	-
+#::2		|		Inode page			|	-
+#::4		|		Index page			|	index id=336, page level=0, No. of records=157, garbage=37, -
+#::5		|		Index page			|	index id=337, page level=0, No. of records=157, garbage=280, -
+#::6		|		Index page			|	index id=338, page level=0, No. of records=157, garbage=28, -
+#::7		|		BLOB page			|	-
+#::8		|		Freshly allocated page		|	-

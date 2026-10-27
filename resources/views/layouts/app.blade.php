@@ -17,17 +17,23 @@
     ])
 </head>
 
-<body class="min-h-screen bg-slate-100 text-slate-800">
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased">
 
     @auth
 
         {{-- NAVBAR --}}
-        @include('layouts.navigation')
+        @include('layouts.topbar')
 
         {{-- CONTENT --}}
-       <main class="min-h-[calc(100vh-72px)] overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8">
-    @yield('content')
-</main>
+        <main class="mx-auto min-h-[calc(100vh-72px)] w-full max-w-[1600px] overflow-x-hidden px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            @isset($header)
+                <header class="mb-6">
+                    {{ $header }}
+                </header>
+            @endisset
+
+            @yield('content', $slot ?? '')
+        </main>
 
     @else
 

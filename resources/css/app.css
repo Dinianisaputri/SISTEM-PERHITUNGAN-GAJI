@@ -1,32 +1,50 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+    :root {
+        color-scheme: light;
+        --app-accent: #16805d;
+        --app-accent-soft: #eaf5ef;
+        --app-border: #e5eae7;
+    }
+
+    html {
+        scroll-behavior: smooth;
+    }
+
     body {
-        @apply bg-slate-100 text-slate-800 antialiased;
+        @apply bg-slate-50 text-slate-800 antialiased;
+        font-family: 'Inter', sans-serif;
+    }
+
+    ::selection {
+        @apply bg-emerald-100 text-emerald-950;
     }
 }
 
 @layer components {
     .theme-shell {
-        @apply min-h-screen bg-[radial-gradient(circle_at_top,_#eff6ff_0%,_#dbeafe_28%,_#e2e8f0_100%)];
+        @apply min-h-screen bg-slate-50;
     }
 
     .soft-card {
-        @apply rounded-2xl border border-blue-100 bg-white;
-        box-shadow: 0 18px 45px rgba(37, 99, 235, 0.08);
+        @apply rounded-xl border border-slate-200 bg-white;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     }
 
     .primary-btn {
-        @apply inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-200;
+        @apply inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200;
     }
 
     .secondary-btn {
-        @apply inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-blue-200 hover:text-blue-700;
+        @apply inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800;
     }
 
     .mini-tag {
-        @apply inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700;
+        @apply inline-flex items-center rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-800;
     }
 }
+

@@ -2,7 +2,7 @@
 
 namespace App\Imports;
 
-use App\Models\BoronganEmployee;
+use App\Models\Employee;
 use App\Models\Checklog;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -21,41 +21,102 @@ class ChecklogImport implements
     {
         foreach ($rows as $row) {
 
-            $noId = trim((string) ($row['no_id'] ?? ''));
+            /*
+            |--------------------------------------------------------------------------
+            | Ambil PIN Fingerprint dari Excel
+            |--------------------------------------------------------------------------
+            |
+            | Kolom "no_id" pada Excel = PIN Fingerprint.
+            |
+            */
 
-            if ($noId === '') {
+            $fingerprintPin = trim(
+                (string) ($row['no_id'] ?? '')
+            );
+
+            if ($fingerprintPin === '') {
                 continue;
             }
 
             /*
-             * Cari apakah No. ID ini terdaftar
-             * sebagai karyawan borongan.
-             */
-            $employee = BoronganEmployee::where('no_id', $noId)->first();
+            |--------------------------------------------------------------------------
+            | Cari karyawan dari Data Karyawan
+            |--------------------------------------------------------------------------
+            |
+            | Tidak lagi menggunakan BoronganEmployee.
+            |
+            */
+
+            $employee = Employee::where(
+                'fingerprint_pin',
+                $fingerprintPin
+            )
+                ->where(
+                    'jenis_karyawan',
+                    'Borongan'
+                )
+                ->where(
+                    'is_active',
+                    true
+                )
+                ->first();
 
             /*
-             * Kalau tidak ada di master,
-             * jangan dimasukkan.
-             */
+            |--------------------------------------------------------------------------
+            | Kalau PIN belum terdaftar sebagai karyawan Borongan
+            |--------------------------------------------------------------------------
+            |
+            | Jangan masukkan ke checklogs.
+            |
+            */
+
             if (!$employee) {
                 continue;
             }
 
-            $tanggal = $this->parseDate($row['tanggal'] ?? null);
+            /*
+            |--------------------------------------------------------------------------
+            | Tanggal
+            |--------------------------------------------------------------------------
+            */
+
+            $tanggal = $this->parseDate(
+                $row['tanggal'] ?? null
+            );
 
             if (!$tanggal) {
                 continue;
             }
 
-            $scanMasuk = $this->parseTime($row['scan_masuk'] ?? null);
-            $scanPulang = $this->parseTime($row['scan_pulang'] ?? null);
+            /*
+            |--------------------------------------------------------------------------
+            | Scan masuk dan scan pulang
+            |--------------------------------------------------------------------------
+            */
+
+            $scanMasuk = $this->parseTime(
+                $row['scan_masuk'] ?? null
+            );
+
+            $scanPulang = $this->parseTime(
+                $row['scan_pulang'] ?? null
+            );
+
+            /*
+            |--------------------------------------------------------------------------
+            | Nilai awal
+            |--------------------------------------------------------------------------
+            */
 
             $totalJamKerja = 0;
             $gaji = 0;
 
             /*
-             * Hitung sementara tanpa istirahat.
-             */
+            |--------------------------------------------------------------------------
+            | Hitung sementara tanpa istirahat
+            |--------------------------------------------------------------------------
+            */
+
             if ($scanMasuk && $scanPulang) {
 
                 $masuk = Carbon::createFromFormat(
@@ -69,57 +130,123 @@ class ChecklogImport implements
                 );
 
                 /*
-                 * Shift lewat tengah malam.
-                 *
-                 * Contoh:
-                 * 16:02 -> 04:45
-                 */
-                if ($pulang->lessThanOrEqualTo($masuk)) {
+                |--------------------------------------------------------------------------
+                | Shift melewati tengah malam
+                |--------------------------------------------------------------------------
+                */
+
+                if (
+                    $pulang->lessThanOrEqualTo($masuk)
+                ) {
                     $pulang->addDay();
                 }
 
-                $totalMinutes = $masuk->diffInMinutes($pulang);
+                $totalMinutes =
+                    $masuk->diffInMinutes($pulang);
 
-                $totalJamKerja = $totalMinutes / 60;
+                $totalJamKerja =
+                    $totalMinutes / 60;
 
-                $gaji = $totalJamKerja * 18000;
+                $gaji =
+                    $totalJamKerja * 18000;
             }
 
+            /*
+            |--------------------------------------------------------------------------
+            | Cek duplikasi
+            |--------------------------------------------------------------------------
+            |
+            | Identitas data:
+            | employee + tanggal + scan masuk + scan pulang
+            |
+            | Jadi kalau file Excel yang sama di-upload
+            | lagi, data tidak dibuat dua kali.
+            |
+            */
+
+            $sudahAda = Checklog::where(
+                'employee_id',
+                $employee->id
+            )
+                ->whereDate(
+                    'tanggal',
+                    $tanggal
+                )
+                ->where(
+                    'scan_masuk',
+                    $scanMasuk
+                )
+                ->where(
+                    'scan_pulang',
+                    $scanPulang
+                )
+                ->exists();
+
+            if ($sudahAda) {
+                continue;
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Simpan Checklog
+            |--------------------------------------------------------------------------
+            */
+
             Checklog::create([
-                'borongan_employee_id' => $employee->id,
 
-                'tanggal' => $tanggal,
+                'employee_id' =>
+                    $employee->id,
 
-                'jam_masuk' => $this->parseTime(
-                    $row['jam_masuk'] ?? null
-                ),
+                'tanggal' =>
+                    $tanggal,
 
-                'jam_pulang' => $this->parseTime(
-                    $row['jam_pulang'] ?? null
-                ),
+                'jam_masuk' =>
+                    $this->parseTime(
+                        $row['jam_masuk'] ?? null
+                    ),
 
-                'scan_masuk' => $scanMasuk,
+                'jam_pulang' =>
+                    $this->parseTime(
+                        $row['jam_pulang'] ?? null
+                    ),
 
-                'scan_pulang' => $scanPulang,
+                'scan_masuk' =>
+                    $scanMasuk,
+
+                'scan_pulang' =>
+                    $scanPulang,
 
                 /*
-                 * Istirahat nanti diinput HRD.
-                 */
+                | Istirahat nanti diinput HRD.
+                */
+
                 'jam_istirahat' => 0,
 
-                'total_jam_kerja' => $totalJamKerja,
+                'total_jam_kerja' =>
+                    $totalJamKerja,
 
-                'hourly_rate' => 18000,
+                'hourly_rate' =>
+                    18000,
 
-                'gaji' => $gaji,
+                'gaji' =>
+                    $gaji,
 
                 /*
-                 * NULL = belum masuk arsip.
-                 */
-                'salary_archive_id' => null,
+                | NULL = belum masuk arsip.
+                */
+
+                'salary_archive_id' =>
+                    null,
             ]);
         }
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Sheet Excel yang digunakan
+    |--------------------------------------------------------------------------
+    */
 
     public function sheets(): array
     {
@@ -128,45 +255,88 @@ class ChecklogImport implements
         ];
     }
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Parse tanggal
+    |--------------------------------------------------------------------------
+    */
+
     private function parseDate($value)
-{
-    if ($value === null || $value === '') {
-        return null;
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        try {
+
+            /*
+            | Tanggal berupa serial Excel
+            */
+
+            if (is_numeric($value)) {
+
+                return Carbon::create(
+                    1899,
+                    12,
+                    30
+                )
+                    ->addDays((int) $value)
+                    ->format('Y-m-d');
+            }
+
+            $value = trim(
+                (string) $value
+            );
+
+            /*
+            | Format dd/mm/yyyy
+            */
+
+            if (
+                preg_match(
+                    '/^\d{2}\/\d{2}\/\d{4}$/',
+                    $value
+                )
+            ) {
+
+                return Carbon::createFromFormat(
+                    'd/m/Y',
+                    $value
+                )->format('Y-m-d');
+            }
+
+            /*
+            | Format yyyy-mm-dd
+            */
+
+            if (
+                preg_match(
+                    '/^\d{4}-\d{2}-\d{2}$/',
+                    $value
+                )
+            ) {
+
+                return Carbon::createFromFormat(
+                    'Y-m-d',
+                    $value
+                )->format('Y-m-d');
+            }
+
+            return null;
+
+        } catch (\Exception $e) {
+
+            return null;
+        }
     }
 
-    try {
 
-        // Jika tanggal berupa angka serial Excel
-        if (is_numeric($value)) {
-            return Carbon::create(1899, 12, 30)
-                ->addDays((int) $value)
-                ->format('Y-m-d');
-        }
-
-        $value = trim((string) $value);
-
-        // Format Excel: dd/mm/yyyy
-        if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value)) {
-            return Carbon::createFromFormat(
-                'd/m/Y',
-                $value
-            )->format('Y-m-d');
-        }
-
-        // Format alternatif yyyy-mm-dd
-        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
-            return Carbon::createFromFormat(
-                'Y-m-d',
-                $value
-            )->format('Y-m-d');
-        }
-
-        return null;
-
-    } catch (\Exception $e) {
-        return null;
-    }
-}
+    /*
+    |--------------------------------------------------------------------------
+    | Parse waktu
+    |--------------------------------------------------------------------------
+    */
 
     private function parseTime($value)
     {
@@ -176,13 +346,19 @@ class ChecklogImport implements
 
         try {
 
+            /*
+            | Jika waktu berupa angka serial Excel
+            */
+
             if (is_numeric($value)) {
 
                 $totalSeconds = round(
                     $value * 24 * 60 * 60
                 );
 
-                $hours = floor($totalSeconds / 3600);
+                $hours = floor(
+                    $totalSeconds / 3600
+                );
 
                 $minutes = floor(
                     ($totalSeconds % 3600) / 60
@@ -200,9 +376,17 @@ class ChecklogImport implements
             )->format('H:i');
 
         } catch (\Exception $e) {
+
             return null;
         }
     }
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Ukuran chunk import
+    |--------------------------------------------------------------------------
+    */
 
     public function chunkSize(): int
     {

@@ -115,7 +115,12 @@
                     {{ $employee->fingerprint_pin ?? '-' }}
                 </p>
             </div>
-
+<div class="detail-item">
+    <div class="detail-label">Nomor Rekening</div>
+    <div class="detail-value">
+        {{ $employee->no_rekening ?: '-' }}
+    </div>
+</div>
 
             {{-- JABATAN --}}
             <div>

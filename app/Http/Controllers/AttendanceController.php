@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\AttendanceLog;
-use App\Models\Employee;
 use Illuminate\Http\Request;
 
 class AttendanceController extends Controller
@@ -18,15 +17,24 @@ class AttendanceController extends Controller
 
         // Filter PIN
         if ($request->filled('search')) {
-            $query->where('pin', 'like', '%' . $request->search . '%');
+            $query->where(
+                'pin',
+                'like',
+                '%' . trim($request->search) . '%'
+            );
         }
 
         // Filter tanggal
         if ($request->filled('tanggal')) {
-            $query->whereDate('punched_at', $request->tanggal);
+            $query->whereDate(
+                'punched_at',
+                $request->tanggal
+            );
         }
 
-        $logs = $query->paginate(20)->withQueryString();
+        $logs = $query
+            ->paginate(150)
+            ->withQueryString();
 
         // Total seluruh scan
         $totalScan = AttendanceLog::count();
@@ -37,19 +45,25 @@ class AttendanceController extends Controller
             now()->toDateString()
         )->count();
 
-        // Jumlah scan yang PIN-nya belum terdaftar
+        // Jumlah PIN yang belum terdaftar
         $belumTerdaftar = AttendanceLog::whereDoesntHave('employee')
             ->distinct('pin')
             ->count('pin');
 
-        return view('attendance.index', compact(
-            'logs',
-            'totalScan',
-            'scanHariIni',
-            'belumTerdaftar'
-        ));
-    }
+        // Alias supaya Blade yang menggunakan $unregisteredPins tidak error
+        $unregisteredPins = $belumTerdaftar;
 
+        return view(
+            'attendance.index',
+            compact(
+                'logs',
+                'totalScan',
+                'scanHariIni',
+                'belumTerdaftar',
+                'unregisteredPins'
+            )
+        );
+    }
 
     /**
      * Halaman khusus PIN yang belum terdaftar
@@ -62,17 +76,26 @@ class AttendanceController extends Controller
 
         // Filter PIN
         if ($request->filled('search')) {
-            $query->where('pin', 'like', '%' . $request->search . '%');
+            $query->where(
+                'pin',
+                'like',
+                '%' . trim($request->search) . '%'
+            );
         }
 
         // Filter tanggal
         if ($request->filled('tanggal')) {
-            $query->whereDate('punched_at', $request->tanggal);
+            $query->whereDate(
+                'punched_at',
+                $request->tanggal
+            );
         }
 
-        $logs = $query->paginate(20)->withQueryString();
+        $logs = $query
+            ->paginate(20)
+            ->withQueryString();
 
-        // Ambil daftar PIN unik yang belum terdaftar
+        // Daftar PIN unik yang belum terdaftar
         $pinBelumTerdaftar = AttendanceLog::whereDoesntHave('employee')
             ->select('pin')
             ->selectRaw('COUNT(*) as total_scan')
@@ -81,9 +104,12 @@ class AttendanceController extends Controller
             ->orderByDesc('terakhir_scan')
             ->get();
 
-        return view('attendance.unregistered', compact(
-            'logs',
-            'pinBelumTerdaftar'
-        ));
+        return view(
+            'attendance.unregistered',
+            compact(
+                'logs',
+                'pinBelumTerdaftar'
+            )
+        );
     }
 }

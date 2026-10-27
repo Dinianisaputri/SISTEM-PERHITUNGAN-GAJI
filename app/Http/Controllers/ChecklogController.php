@@ -4,79 +4,97 @@ namespace App\Http\Controllers;
 
 use App\Imports\ChecklogImport;
 use App\Models\Checklog;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Carbon\Carbon;
 
 class ChecklogController extends Controller
 {
- public function index(Request $request)
-{
-    $query = Checklog::with('employee')
-        ->whereNull('salary_archive_id');
+    public function index(Request $request)
+    {
+        $query = Checklog::with('employee')
+            ->whereNull('salary_archive_id');
 
-    // Filter tampilan berdasarkan tanggal
-    if ($request->filled('filter_tanggal_mulai')) {
-        $query->whereDate(
-            'tanggal',
-            '>=',
-            $request->filter_tanggal_mulai
-        );
-    }
-
-    if ($request->filled('filter_tanggal_selesai')) {
-        $query->whereDate(
-            'tanggal',
-            '<=',
-            $request->filter_tanggal_selesai
-        );
-    }
-
-    // Filter tampilan berdasarkan nama
-    if ($request->filled('nama_karyawan')) {
-
-        $nama = $request->nama_karyawan;
-
-        $query->whereHas('employee', function ($q) use ($nama) {
-            $q->where(
-                'name',
-                'like',
-                '%' . $nama . '%'
+        // Filter tanggal mulai
+        if ($request->filled('filter_tanggal_mulai')) {
+            $query->whereDate(
+                'tanggal',
+                '>=',
+                $request->filter_tanggal_mulai
             );
-        });
+        }
+
+        // Filter tanggal selesai
+        if ($request->filled('filter_tanggal_selesai')) {
+            $query->whereDate(
+                'tanggal',
+                '<=',
+                $request->filter_tanggal_selesai
+            );
+        }
+
+        // Filter nama karyawan
+        if ($request->filled('nama_karyawan')) {
+            $nama = $request->nama_karyawan;
+
+            $query->whereHas('employee', function ($q) use ($nama) {
+                $q->where('name', 'like', '%' . $nama . '%');
+            });
+        }
+
+        $checklogs = $query
+            ->orderBy('tanggal')
+            ->orderBy('employee_id')
+            ->get();
+
+        // Periode seluruh data yang belum diarsipkan
+        $tanggalMulai = Checklog::whereNull('salary_archive_id')
+            ->min('tanggal');
+
+        $tanggalSelesai = Checklog::whereNull('salary_archive_id')
+            ->max('tanggal');
+
+        // Karyawan Borongan dari Data Karyawan
+        $employees = Employee::where('is_active', true)
+            ->where('jenis_karyawan', 'Borongan')
+            ->orderBy('name')
+            ->get();
+
+        return view(
+            'checklogs.index',
+            compact(
+                'checklogs',
+                'tanggalMulai',
+                'tanggalSelesai',
+                'employees'
+            )
+        );
     }
 
-    $checklogs = $query
-        ->orderBy('tanggal')
-        ->orderBy('borongan_employee_id')
-        ->get();
 
-    // Periode seluruh data yang belum diarsipkan
-    $tanggalMulai = Checklog::whereNull('salary_archive_id')
-        ->min('tanggal');
-
-    $tanggalSelesai = Checklog::whereNull('salary_archive_id')
-        ->max('tanggal');
-
-    return view(
-        'checklogs.index',
-        compact(
-            'checklogs',
-            'tanggalMulai',
-            'tanggalSelesai'
-        )
-    );
-}
     public function import(Request $request)
     {
         $request->validate([
             'file' => ['required', 'file', 'mimes:xlsx,xls'],
-            'tanggal_mulai' => ['required', 'date'],
+
+            'tanggal_mulai' => [
+                'required',
+                'date'
+            ],
+
             'tanggal_selesai' => [
                 'required',
                 'date',
                 'after_or_equal:tanggal_mulai'
             ],
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hapus data lama pada periode yang sama
+        |--------------------------------------------------------------------------
+        */
 
         Checklog::whereNull('salary_archive_id')
             ->whereBetween('tanggal', [
@@ -85,10 +103,24 @@ class ChecklogController extends Controller
             ])
             ->delete();
 
+
+        /*
+        |--------------------------------------------------------------------------
+        | Import Excel
+        |--------------------------------------------------------------------------
+        */
+
         Excel::import(
             new ChecklogImport,
             $request->file('file')
         );
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hapus data di luar periode yang dipilih
+        |--------------------------------------------------------------------------
+        */
 
         Checklog::whereNull('salary_archive_id')
             ->where(function ($query) use ($request) {
@@ -107,176 +139,304 @@ class ChecklogController extends Controller
             })
             ->delete();
 
+
         return redirect()
             ->route('checklogs.index')
-            ->with('success', 'Data Excel berhasil diimport.');
+            ->with(
+                'success',
+                'Data Excel berhasil diimport.'
+            );
     }
 
 
     public function hitungSemua(Request $request)
-{
-    $request->validate([
-        'istirahat' => 'required|array',
-        'istirahat.*' => [
-            'required',
-            'regex:/^\d+(\.[0-5][0-9])?$/'
-        ],
-    ], [
-        'istirahat.*.regex' =>
-            'Format istirahat harus seperti 0.00, 0.30, 1.00, atau 1.30.'
-    ]);
+    {
+        $request->validate([
+            'istirahat' => 'required|array',
 
-    foreach ($request->istirahat as $id => $jamIstirahat) {
+            'istirahat.*' => [
+                'required',
+                'regex:/^\d+(\.[0-5][0-9])?$/'
+            ],
 
-        $checklog = Checklog::whereNull('salary_archive_id')
-            ->find($id);
+        ], [
 
-        if (!$checklog) {
-            continue;
-        }
+            'istirahat.*.regex' =>
+                'Format istirahat harus seperti 0.00, 0.30, 1.00, atau 1.30.'
 
-        /*
-         * Format:
-         * 1.00 = 1 jam
-         * 1.30 = 1 jam 30 menit
-         * 0.30 = 30 menit
-         */
+        ]);
 
-        $jamIstirahat = (string) $jamIstirahat;
 
-        if (str_contains($jamIstirahat, '.')) {
+        foreach ($request->istirahat as $id => $jamIstirahat) {
 
-            [$jam, $menit] = explode('.', $jamIstirahat);
+            $checklog = Checklog::whereNull('salary_archive_id')
+                ->find($id);
 
-            $jam = (int) $jam;
-            $menit = (int) str_pad($menit, 2, '0');
-
-        } else {
-
-            $jam = (int) $jamIstirahat;
-            $menit = 0;
-
-        }
-
-        $breakMinutes = ($jam * 60) + $menit;
-
-        $totalJamKerja = 0;
-        $gaji = 0;
-
-        /*
-         * Hitung berdasarkan Scan Masuk dan Scan Pulang
-         */
-        if ($checklog->scan_masuk && $checklog->scan_pulang) {
-
-            $masuk = \Carbon\Carbon::createFromFormat(
-                'H:i:s',
-                $checklog->scan_masuk
-            );
-
-            $pulang = \Carbon\Carbon::createFromFormat(
-                'H:i:s',
-                $checklog->scan_pulang
-            );
-
-            /*
-             * Jika pulang melewati tengah malam
-             *
-             * Contoh:
-             * 16:02 -> 04:45
-             */
-            if ($pulang->lessThanOrEqualTo($masuk)) {
-                $pulang->addDay();
+            if (!$checklog) {
+                continue;
             }
 
-            // Durasi kerja dari fingerprint
-            $totalMinutes = $masuk->diffInMinutes($pulang);
 
-            // Kurangi waktu istirahat
-            $workMinutes = max(
-                0,
-                $totalMinutes - $breakMinutes
-            );
+            /*
+            |--------------------------------------------------------------------------
+            | Format istirahat
+            |--------------------------------------------------------------------------
+            |
+            | 1.00 = 1 jam
+            | 1.30 = 1 jam 30 menit
+            | 0.30 = 30 menit
+            |
+            */
 
-            // Ubah menit menjadi jam
-            $totalJamKerja = $workMinutes / 60;
+            $jamIstirahat = (string) $jamIstirahat;
 
-            // Tarif Rp18.000 per jam
-            $gaji = $workMinutes * (18000 / 60);
+            if (str_contains($jamIstirahat, '.')) {
+
+                [$jam, $menit] = explode(
+                    '.',
+                    $jamIstirahat
+                );
+
+                $jam = (int) $jam;
+
+                $menit = (int) str_pad(
+                    $menit,
+                    2,
+                    '0'
+                );
+
+            } else {
+
+                $jam = (int) $jamIstirahat;
+
+                $menit = 0;
+            }
+
+
+            $breakMinutes =
+                ($jam * 60) + $menit;
+
+
+            $totalJamKerja = 0;
+
+            $gaji = 0;
+
+
+            /*
+            |--------------------------------------------------------------------------
+            | Hitung berdasarkan Scan Masuk dan Scan Pulang
+            |--------------------------------------------------------------------------
+            */
+
+            if (
+                $checklog->scan_masuk &&
+                $checklog->scan_pulang
+            ) {
+
+                $masuk = Carbon::createFromFormat(
+                    'H:i:s',
+                    $checklog->scan_masuk
+                );
+
+                $pulang = Carbon::createFromFormat(
+                    'H:i:s',
+                    $checklog->scan_pulang
+                );
+
+
+                /*
+                | Jika pulang melewati tengah malam
+                */
+
+                if (
+                    $pulang->lessThanOrEqualTo($masuk)
+                ) {
+                    $pulang->addDay();
+                }
+
+
+                // Total durasi dari fingerprint
+                $totalMinutes =
+                    $masuk->diffInMinutes($pulang);
+
+
+                // Kurangi waktu istirahat
+                $workMinutes = max(
+                    0,
+                    $totalMinutes - $breakMinutes
+                );
+
+
+                // Ubah menit menjadi jam
+                $totalJamKerja =
+                    $workMinutes / 60;
+
+
+                // Tarif Rp18.000 per jam
+                $gaji =
+                    $workMinutes * (18000 / 60);
+            }
+
+
+            $checklog->update([
+                'jam_istirahat' => $jamIstirahat,
+                'total_jam_kerja' => $totalJamKerja,
+                'hourly_rate' => 18000,
+                'gaji' => $gaji,
+            ]);
         }
 
-        $checklog->update([
-            'jam_istirahat' => $jamIstirahat,
-            'total_jam_kerja' => $totalJamKerja,
-            'hourly_rate' => 18000,
-            'gaji' => $gaji,
-        ]);
-    }
 
-    return redirect()
-        ->route('checklogs.index')
-        ->with('success', 'Semua gaji berhasil dihitung.');
-}
-public function simpanArsip(Request $request)
-{
-    $request->validate([
-        'tanggal_mulai' => 'required|date',
-        'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
-    ]);
-
-    // Ambil semua checklog yang belum masuk arsip
-    $checklogs = Checklog::whereNull('salary_archive_id')
-        ->whereBetween('tanggal', [
-            $request->tanggal_mulai,
-            $request->tanggal_selesai,
-        ])
-        ->get();
-
-    // Kalau tidak ada data
-    if ($checklogs->isEmpty()) {
         return redirect()
             ->route('checklogs.index')
-            ->with('error', 'Tidak ada data gaji yang dapat diarsipkan.');
+            ->with(
+                'success',
+                'Semua gaji berhasil dihitung.'
+            );
     }
 
-    // Buat nama arsip berdasarkan periode
-    $tanggalMulai = \Carbon\Carbon::parse($request->tanggal_mulai)
-        ->format('d-m-Y');
 
-    $tanggalSelesai = \Carbon\Carbon::parse($request->tanggal_selesai)
-        ->format('d-m-Y');
+    public function simpanArsip(Request $request)
+    {
+        $request->validate([
+            'tanggal_mulai' => [
+                'required',
+                'date'
+            ],
 
-    $namaArsip = "Gaji KHL {$tanggalMulai} s/d {$tanggalSelesai}";
-
-    // Hitung total gaji
-    $totalGaji = $checklogs->sum('gaji');
-
-    // Hitung jumlah checklog
-    $totalChecklogs = $checklogs->count();
-
-    // Hitung jumlah karyawan unik
-    $totalKaryawan = $checklogs
-        ->pluck('borongan_employee_id')
-        ->unique()
-        ->count();
-
-    // Buat arsip
-    $archive = \App\Models\SalaryArchive::create([
-        'archive_name' => $namaArsip,
-        'start_date' => $request->tanggal_mulai,
-        'end_date' => $request->tanggal_selesai,
-        'total_salary' => $totalGaji,
-        'total_checklogs' => $totalChecklogs,
-        'total_employees' => $totalKaryawan,
-    ]);
-
-    // Masukkan semua checklog ke arsip tersebut
-    Checklog::whereIn('id', $checklogs->pluck('id'))
-        ->update([
-            'salary_archive_id' => $archive->id,
+            'tanggal_selesai' => [
+                'required',
+                'date',
+                'after_or_equal:tanggal_mulai'
+            ],
         ]);
 
-    return redirect()
-        ->route('checklogs.index')
-        ->with('success', 'Data gaji berhasil disimpan ke arsip.');
-}
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ambil checklog yang belum diarsipkan
+        |--------------------------------------------------------------------------
+        */
+
+        $checklogs = Checklog::whereNull('salary_archive_id')
+            ->whereBetween('tanggal', [
+                $request->tanggal_mulai,
+                $request->tanggal_selesai,
+            ])
+            ->get();
+
+
+        if ($checklogs->isEmpty()) {
+
+            return redirect()
+                ->route('checklogs.index')
+                ->with(
+                    'error',
+                    'Tidak ada data gaji yang dapat diarsipkan.'
+                );
+        }
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Nama arsip
+        |--------------------------------------------------------------------------
+        */
+
+        $tanggalMulai = Carbon::parse(
+            $request->tanggal_mulai
+        )->format('d-m-Y');
+
+        $tanggalSelesai = Carbon::parse(
+            $request->tanggal_selesai
+        )->format('d-m-Y');
+
+
+        $namaArsip =
+            "Gaji KHL {$tanggalMulai} s/d {$tanggalSelesai}";
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Total gaji
+        |--------------------------------------------------------------------------
+        */
+
+        $totalGaji =
+            $checklogs->sum('gaji');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Jumlah checklog
+        |--------------------------------------------------------------------------
+        */
+
+        $totalChecklogs =
+            $checklogs->count();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Jumlah karyawan unik
+        |--------------------------------------------------------------------------
+        |
+        | Sekarang menggunakan employee_id
+        |
+        */
+
+        $totalKaryawan = $checklogs
+            ->pluck('employee_id')
+            ->unique()
+            ->count();
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Buat arsip
+        |--------------------------------------------------------------------------
+        */
+
+        $archive = \App\Models\SalaryArchive::create([
+            'archive_name' => $namaArsip,
+
+            'start_date' =>
+                $request->tanggal_mulai,
+
+            'end_date' =>
+                $request->tanggal_selesai,
+
+            'total_salary' =>
+                $totalGaji,
+
+            'total_checklogs' =>
+                $totalChecklogs,
+
+            'total_employees' =>
+                $totalKaryawan,
+        ]);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Masukkan checklog ke arsip
+        |--------------------------------------------------------------------------
+        */
+
+        Checklog::whereIn(
+            'id',
+            $checklogs->pluck('id')
+        )->update([
+            'salary_archive_id' =>
+                $archive->id,
+        ]);
+
+
+        return redirect()
+            ->route('checklogs.index')
+            ->with(
+                'success',
+                'Data gaji berhasil disimpan ke arsip.'
+            );
+    }
 }

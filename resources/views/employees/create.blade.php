@@ -95,21 +95,48 @@
                         placeholder="Nomor induk karyawan"
                     >
                 </div>
+{{-- Nomor Rekening --}}
+<div>
+    <label class="block text-sm font-medium text-slate-700 mb-1">
+        Nomor Rekening
+    </label>
 
-                {{-- PIN Fingerprint --}}
+    <input
+        type="text"
+        name="no_rekening"
+        value="{{ old('no_rekening') }}"
+        maxlength="50"
+        class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+        placeholder="Masukkan nomor rekening"
+    >
+
+    @error('no_rekening')
+        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+    @enderror
+</div>
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1">
-                        PIN Fingerprint
-                    </label>
+    <label
+        for="fingerprint_pin"
+        class="mb-1.5 block text-sm font-medium text-slate-700"
+    >
+        PIN Fingerprint
+    </label>
 
-                    <input
-                        type="text"
-                        name="fingerprint_pin"
-                        value="{{ old('fingerprint_pin') }}"
-                        class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="PIN fingerprint"
-                    >
-                </div>
+    <input
+        type="text"
+        id="fingerprint_pin"
+        name="fingerprint_pin"
+        value="{{ old('fingerprint_pin', $fingerprintPin ?? request('fingerprint_pin')) }}"
+        placeholder="Masukkan PIN fingerprint"
+        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+    >
+
+    @error('fingerprint_pin')
+        <p class="mt-1 text-xs text-red-600">
+            {{ $message }}
+        </p>
+    @enderror
+</div>
 
                 {{-- Jabatan --}}
                 <div>
@@ -117,13 +144,22 @@
                         Jabatan
                     </label>
 
-                    <input
-                        type="text"
+                   <select
                         name="jabatan"
-                        value="{{ old('jabatan') }}"
+                        required
                         class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Jabatan"
                     >
+                        <option value="">Pilih Jabatan</option>
+
+                        @foreach ($jabatanList as $jabatan)
+                            <option
+                                value="{{ $jabatan }}"
+                                {{ old('jabatan') == $jabatan ? 'selected' : '' }}
+                            >
+                                {{ $jabatan }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 {{-- Bagian --}}
@@ -149,8 +185,34 @@
                         @endforeach
                     </select>
                 </div>
+                                    {{-- Unit Penempatan --}}
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">
+                        Unit Penempatan <span class="text-red-500">*</span>
+                    </label>
 
-                {{-- Jenis Karyawan --}}
+                    <select
+                        name="penempatan"
+                        required
+                        class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    >
+                        <option value="">Pilih Unit Penempatan</option>
+
+                        @foreach ($penempatanList as $penempatan)
+                            <option
+                                value="{{ $penempatan }}"
+                                {{ old('penempatan') == $penempatan ? 'selected' : '' }}
+                            >
+                                {{ $penempatan }}
+                            </option>
+                        @endforeach
+                    </select>
+
+                    @error('penempatan')
+                        <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
+                    @enderror
+                </div>
+       {{-- Jenis Karyawan --}}
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">
                         Jenis Karyawan
@@ -305,23 +367,131 @@
                     >
                 </div>
 
-                {{-- Alamat --}}
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-slate-700 mb-1">
-                        Alamat Domisili
-                    </label>
+                {{-- ALAMAT DOMISILI --}}
+<div class="md:col-span-2">
+    <label class="block text-sm font-medium text-slate-700 mb-3">
+        Alamat Domisili
+    </label>
 
-                    <textarea
-                        name="alamat_domisili"
-                        rows="3"
-                        class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Alamat domisili"
-                    >{{ old('alamat_domisili') }}</textarea>
-                </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            </div>
+        {{-- PROVINSI --}}
+        <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+                Provinsi
+            </label>
+
+            <select
+                name="provinsi_id"
+                id="provinsi_id"
+                class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+            >
+                <option value="">Pilih Provinsi</option>
+
+                @foreach ($provinsiList as $provinsi)
+                    <option
+                        value="{{ $provinsi->id }}"
+                        {{ old('provinsi_id') == $provinsi->id ? 'selected' : '' }}
+                    >
+                        {{ $provinsi->nama }}
+                    </option>
+                @endforeach
+            </select>
         </div>
 
+        {{-- KABUPATEN --}}
+        <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+                Kabupaten / Kota
+            </label>
+
+            <select
+                name="kabupaten_id"
+                id="kabupaten_id"
+                disabled
+                class="w-full rounded-lg border-slate-300 bg-slate-50 focus:border-blue-500 focus:ring-blue-500"
+            >
+                <option value="">Pilih Kabupaten / Kota</option>
+            </select>
+        </div>
+
+        {{-- KECAMATAN --}}
+        <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+                Kecamatan
+            </label>
+
+            <select
+                name="kecamatan_id"
+                id="kecamatan_id"
+                disabled
+                class="w-full rounded-lg border-slate-300 bg-slate-50 focus:border-blue-500 focus:ring-blue-500"
+            >
+                <option value="">Pilih Kecamatan</option>
+            </select>
+        </div>
+
+        {{-- DESA --}}
+        <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+                Desa / Kelurahan
+            </label>
+
+            <select
+                name="desa_id"
+                id="desa_id"
+                disabled
+                class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+            >
+                <option value="">Pilih Desa / Kelurahan</option>
+            </select>
+        </div>
+
+        {{-- RT --}}
+        <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+                RT
+            </label>
+
+            <input
+                type="text"
+                name="rt"
+                value="{{ old('rt') }}"
+                maxlength="10"
+                class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Contoh: 001"
+            >
+        </div>
+
+        {{-- RW --}}
+        <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+                RW
+            </label>
+
+            <input
+                type="text"
+                name="rw"
+                value="{{ old('rw') }}"
+                maxlength="10"
+                class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Contoh: 002"
+            >
+        </div>
+
+        {{-- DETAIL ALAMAT --}}
+        <div class="md:col-span-2">
+            <label class="block text-xs font-medium text-slate-600 mb-1">
+                Detail Alamat
+            </label>
+
+            <textarea
+                name="detail_alamat"
+                rows="3"
+                class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                placeholder="Nama jalan, dusun, nomor rumah, patokan, dan detail lainnya"
+            >{{ old('detail_alamat') }}</textarea>
+        </div>
 
         {{-- =========================
              DATA PEKERJAAN
@@ -527,12 +697,14 @@
         ========================== --}}
         <div class="flex items-center gap-3 pt-5 border-t border-slate-200">
 
-            <a
-                href="{{ route('employees.index') }}"
-                class="px-5 py-2.5 rounded-lg bg-slate-200 text-slate-700 font-medium hover:bg-slate-300"
-            >
-                Batal
-            </a>
+           <a
+    href="{{ request()->has('fingerprint_pin')
+        ? route('attendance.unregistered')
+        : route('employees.index') }}"
+    class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+>
+    Batal
+</a>
 
             <button
                 type="submit"
@@ -546,5 +718,241 @@
     </form>
 
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
 
+    const provinsi = document.getElementById('provinsi_id');
+    const kabupaten = document.getElementById('kabupaten_id');
+    const kecamatan = document.getElementById('kecamatan_id');
+    const desa = document.getElementById('desa_id');
+
+    const regionUrl = @json(route('employees.regions'));
+
+    const oldProvinsi = @json(old('provinsi_id'));
+    const oldKabupaten = @json(old('kabupaten_id'));
+    const oldKecamatan = @json(old('kecamatan_id'));
+    const oldDesa = @json(old('desa_id'));
+
+    function resetSelect(select, placeholder) {
+        select.innerHTML = '';
+
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = placeholder;
+
+        select.appendChild(option);
+        select.disabled = true;
+    }
+
+    function fillSelect(select, regions, placeholder, selectedId = null) {
+
+        select.innerHTML = '';
+
+        const placeholderOption = document.createElement('option');
+        placeholderOption.value = '';
+        placeholderOption.textContent = placeholder;
+
+        select.appendChild(placeholderOption);
+
+        regions.forEach(function (region) {
+
+            const option = document.createElement('option');
+
+            option.value = region.id;
+            option.textContent = region.nama;
+
+            if (
+                selectedId !== null &&
+                selectedId !== '' &&
+                String(selectedId) === String(region.id)
+            ) {
+                option.selected = true;
+            }
+
+            select.appendChild(option);
+        });
+
+        select.disabled = regions.length === 0;
+    }
+
+    async function loadRegions(
+        parentId,
+        level,
+        select,
+        placeholder,
+        selectedId = null
+    ) {
+
+        resetSelect(select, 'Memuat...');
+
+        if (!parentId) {
+            resetSelect(select, placeholder);
+            return;
+        }
+
+        const url =
+            regionUrl +
+            '?level=' +
+            encodeURIComponent(level) +
+            '&parent_id=' +
+            encodeURIComponent(parentId);
+
+        console.log('Mengambil wilayah:', url);
+
+        try {
+
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+
+            console.log('Status:', response.status);
+
+            if (!response.ok) {
+                throw new Error('HTTP ' + response.status);
+            }
+
+            const regions = await response.json();
+
+            console.log('Data ' + level + ':', regions);
+
+            fillSelect(
+                select,
+                regions,
+                placeholder,
+                selectedId
+            );
+
+        } catch (error) {
+
+            console.error(
+                'Gagal mengambil data wilayah:',
+                error
+            );
+
+            resetSelect(select, placeholder);
+        }
+    }
+
+    // PROVINSI → KABUPATEN
+    provinsi.addEventListener('change', function () {
+
+        resetSelect(
+            kabupaten,
+            'Pilih Kabupaten / Kota'
+        );
+
+        resetSelect(
+            kecamatan,
+            'Pilih Kecamatan'
+        );
+
+        resetSelect(
+            desa,
+            'Pilih Desa / Kelurahan'
+        );
+
+        if (this.value) {
+
+            loadRegions(
+                this.value,
+                'kabupaten',
+                kabupaten,
+                'Pilih Kabupaten / Kota'
+            );
+        }
+    });
+
+    // KABUPATEN → KECAMATAN
+    kabupaten.addEventListener('change', function () {
+
+        resetSelect(
+            kecamatan,
+            'Pilih Kecamatan'
+        );
+
+        resetSelect(
+            desa,
+            'Pilih Desa / Kelurahan'
+        );
+
+        if (this.value) {
+
+            loadRegions(
+                this.value,
+                'kecamatan',
+                kecamatan,
+                'Pilih Kecamatan'
+            );
+        }
+    });
+
+    // KECAMATAN → DESA
+    kecamatan.addEventListener('change', function () {
+
+        resetSelect(
+            desa,
+            'Pilih Desa / Kelurahan'
+        );
+
+        if (this.value) {
+
+            loadRegions(
+                this.value,
+                'desa',
+                desa,
+                'Pilih Desa / Kelurahan'
+            );
+        }
+    });
+
+    // RESTORE OLD INPUT
+    async function restoreOldAddress() {
+
+        if (!oldProvinsi) {
+            return;
+        }
+
+        provinsi.value = oldProvinsi;
+
+        await loadRegions(
+            oldProvinsi,
+            'kabupaten',
+            kabupaten,
+            'Pilih Kabupaten / Kota',
+            oldKabupaten
+        );
+
+        if (!oldKabupaten) {
+            return;
+        }
+
+        await loadRegions(
+            oldKabupaten,
+            'kecamatan',
+            kecamatan,
+            'Pilih Kecamatan',
+            oldKecamatan
+        );
+
+        if (!oldKecamatan) {
+            return;
+        }
+
+        await loadRegions(
+            oldKecamatan,
+            'desa',
+            desa,
+            'Pilih Desa / Kelurahan',
+            oldDesa
+        );
+    }
+
+    restoreOldAddress();
+
+});
+</script>
 @endsection

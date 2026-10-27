@@ -15,7 +15,6 @@
             </p>
         </div>
 
-
         {{-- Statistik --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
 
@@ -135,7 +134,10 @@
                         href="{{ route('regulations.index') }}"
                         class="text-sm text-blue-600 hover:text-blue-800"
                     >
-                        Lihat Semua
+
+                        <button class="font-medium text-blue-600 hover:text-blue-800">
+                            Lihat Semua
+                        </button>
                     </a>
 
                 </div>

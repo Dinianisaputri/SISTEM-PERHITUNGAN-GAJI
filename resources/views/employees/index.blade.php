@@ -110,7 +110,7 @@
                         type="text"
                         name="search"
                         value="{{ request('search') }}"
-                        placeholder="Cari nama, PIN, NIK, bagian..."
+                        placeholder="Cari nama, PIN, NIK, bagian, alamat..."
                         class="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-100"
                     >
 
@@ -282,7 +282,13 @@
                         <th class="px-3 py-3 font-semibold">
                             Aksi
                         </th>
-
+<a
+    href="{{ route('employees.export-pdf', request()->query()) }}"
+    target="_blank"
+    class="inline-flex items-center rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+>
+    Export PDF
+</a>
                     </tr>
 
                 </thead>

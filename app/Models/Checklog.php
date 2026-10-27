@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Region;
 
 class Checklog extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
-        'borongan_employee_id',
+        'employee_id',
         'tanggal',
         'jam_masuk',
         'jam_pulang',
@@ -19,6 +22,13 @@ class Checklog extends Model
         'hourly_rate',
         'gaji',
         'salary_archive_id',
+        'provinsi_id',
+        'kabupaten_id',
+        'kecamatan_id',
+        'desa_id',
+        'rt',
+        'rw',
+        'detail_alamat',
     ];
 
     protected $casts = [
@@ -29,13 +39,45 @@ class Checklog extends Model
         'gaji' => 'decimal:2',
     ];
 
-    public function employee(): BelongsTo
+    /**
+     * Checklog milik satu karyawan
+     * yang berasal dari Data Karyawan.
+     */
+    public function employee()
     {
-        return $this->belongsTo(BoronganEmployee::class, 'borongan_employee_id');
+        return $this->belongsTo(
+            Employee::class,
+            'employee_id'
+        );
     }
 
-    public function archive(): BelongsTo
+    /**
+     * Checklog masuk ke arsip gaji
+     */
+    public function salaryArchive()
     {
-        return $this->belongsTo(SalaryArchive::class, 'salary_archive_id');
+        return $this->belongsTo(
+            SalaryArchive::class,
+            'salary_archive_id'
+        );
     }
+    public function provinsi()
+{
+    return $this->belongsTo(Region::class, 'provinsi_id');
+}
+
+public function kabupaten()
+{
+    return $this->belongsTo(Region::class, 'kabupaten_id');
+}
+
+public function kecamatan()
+{
+    return $this->belongsTo(Region::class, 'kecamatan_id');
+}
+
+public function desa()
+{
+    return $this->belongsTo(Region::class, 'desa_id');
+}
 }

@@ -5,25 +5,22 @@ namespace App\Http\Controllers;
 use App\Models\Regulation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class RegulationController extends Controller
 {
     /**
      * Daftar kategori regulasi
      */
-    private function kategoriList()
-    {
-        return [
-            'KORPORASI DAN TATA KELOLA',
-            'IZIN KEMENTERIAN KELAUTAN DAN PERIKANAN',
-            'REGISTRASI NEGARA MITRA & FDA',
-            'IJIN EDAR PANGAN OLAHAN & SEGAR',
-            'TENAGA KERJA ASING DAN HUBUNGAN INDUSTRIAL',
-            'KESEHATAN DAN KESELAMATAN KERJA (K3)',
-            'INVENTARIS DAN KENDARAAN',
-        ];
-    }
-
+  private function kategoriList()
+{
+    return DB::table('master_kategori_regulations')
+        ->where('is_active', true)
+        ->orderBy('nama')
+        ->pluck('nama')
+        ->toArray();
+}
 
     /**
      * Dashboard Regulasi
@@ -203,10 +200,14 @@ class RegulationController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+                    $validated = $request->validate([
 
-            'kategori' => 'required|string|max:255',
-
+                    'kategori' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::in($this->kategoriList()),
+            ],
             'jenis_perijinan' => 'required|string|max:255',
 
             'regulasi' => 'nullable|string',
@@ -289,9 +290,17 @@ class RegulationController extends Controller
         Request $request,
         Regulation $regulation
     ) {
-        $validated = $request->validate([
+                        $validated = $request->validate([
 
-            'kategori' => 'required|string|max:255',
+                    'kategori' => [
+                    'required',
+                    'string',
+                    'max:255',
+                    Rule::in(array_values(array_unique(array_merge(
+                        $this->kategoriList(),
+                        [$regulation->kategori]
+                    )))),
+                ],
 
             'jenis_perijinan' => 'required|string|max:255',
 
@@ -396,8 +405,9 @@ class RegulationController extends Controller
         }
 
 
-        return Storage::disk('public')->download(
-            $regulation->dokumen
+        return response()->download(
+            Storage::disk('public')->path($regulation->dokumen),
+            basename($regulation->dokumen)
         );
     }
 }

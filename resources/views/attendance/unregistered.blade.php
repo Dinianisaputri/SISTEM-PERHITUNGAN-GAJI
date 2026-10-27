@@ -6,7 +6,10 @@
 
 <div class="space-y-6">
 
+    {{-- ========================================================= --}}
     {{-- HEADER --}}
+    {{-- ========================================================= --}}
+
     <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
 
         <div>
@@ -22,6 +25,7 @@
                 Daftar PIN fingerprint yang belum terhubung dengan Data Karyawan.
             </p>
         </div>
+
 
         <div class="flex gap-2">
 
@@ -44,8 +48,9 @@
                     />
                 </svg>
 
-                Data Fingerprint
+                Data Absensi
             </a>
+
 
             <a
                 href="{{ route('employees.create') }}"
@@ -74,7 +79,10 @@
     </div>
 
 
+    {{-- ========================================================= --}}
     {{-- PERINGATAN --}}
+    {{-- ========================================================= --}}
+
     <div class="rounded-2xl border border-red-200 bg-red-50 p-5">
 
         <div class="flex items-start gap-3">
@@ -106,8 +114,8 @@
 
                 <p class="mt-1 text-sm leading-6 text-red-700">
                     Data fingerprint tetap disimpan meskipun PIN belum memiliki
-                    data karyawan. Tambahkan PIN yang sesuai pada Data Karyawan
-                    agar seluruh riwayat scan dapat otomatis terhubung.
+                    data karyawan. Tambahkan PIN tersebut ke Data Karyawan
+                    agar riwayat scan otomatis terhubung.
                 </p>
 
                 <p class="mt-2 text-xs text-red-600">
@@ -121,17 +129,20 @@
     </div>
 
 
-    {{-- RINGKASAN PIN --}}
-    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+    {{-- ========================================================= --}}
+    {{-- DAFTAR PIN BELUM TERDAFTAR --}}
+    {{-- ========================================================= --}}
+
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
         <div class="border-b border-slate-200 px-6 py-5">
 
-            <h3 class="text-base font-semibold text-slate-800">
+            <h2 class="text-base font-semibold text-slate-800">
                 Daftar PIN Belum Terdaftar
-            </h3>
+            </h2>
 
             <p class="mt-1 text-sm text-slate-500">
-                Setiap PIN ditampilkan satu kali berdasarkan data fingerprint yang diterima.
+                Setiap PIN ditampilkan satu kali berdasarkan riwayat fingerprint.
             </p>
 
         </div>
@@ -141,7 +152,7 @@
 
             <div class="w-full overflow-x-auto">
 
-                <table class="min-w-[750px] w-full text-left text-sm">
+                <table class="min-w-[900px] w-full text-left text-sm">
 
                     <thead class="border-b border-slate-200 bg-slate-50">
 
@@ -167,6 +178,10 @@
                                 Status
                             </th>
 
+                            <th class="whitespace-nowrap px-6 py-3 font-semibold text-slate-600">
+                                Aksi
+                            </th>
+
                         </tr>
 
                     </thead>
@@ -176,7 +191,7 @@
 
                         @foreach($pinBelumTerdaftar as $index => $item)
 
-                            <tr class="bg-red-50/50 transition hover:bg-red-50">
+                            <tr class="transition hover:bg-red-50/50">
 
                                 {{-- NO --}}
                                 <td class="whitespace-nowrap px-6 py-4 text-slate-500">
@@ -233,6 +248,36 @@
 
                                 </td>
 
+
+                                {{-- AKSI --}}
+                                <td class="whitespace-nowrap px-6 py-4">
+
+                                    <a
+                                        href="{{ route('employees.create', ['fingerprint_pin' => $item->pin]) }}"
+                                        class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-blue-700"
+                                    >
+
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-4 w-4"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            stroke-width="2"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M12 4v16m8-8H4"
+                                            />
+                                        </svg>
+
+                                        Tambah Karyawan
+
+                                    </a>
+
+                                </td>
+
                             </tr>
 
                         @endforeach
@@ -281,14 +326,17 @@
     </div>
 
 
+    {{-- ========================================================= --}}
     {{-- DETAIL RIWAYAT SCAN --}}
+    {{-- ========================================================= --}}
+
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
 
         <div class="border-b border-slate-200 px-6 py-5">
 
-            <h3 class="text-base font-semibold text-slate-800">
+            <h2 class="text-base font-semibold text-slate-800">
                 Detail Riwayat Scan
-            </h3>
+            </h2>
 
             <p class="mt-1 text-sm text-slate-500">
                 Seluruh scan dari PIN yang belum terdaftar.
@@ -344,7 +392,7 @@
 
                         @foreach($logs as $log)
 
-                            <tr class="bg-red-50/40 transition hover:bg-red-50">
+                            <tr class="transition hover:bg-red-50/40">
 
                                 {{-- NO --}}
                                 <td class="whitespace-nowrap px-5 py-3 text-slate-500">
@@ -369,7 +417,7 @@
 
 
                                 {{-- WAKTU --}}
-                                <td class="whitespace-nowrap px-5 py-3 text-slate-600">
+                                <td class="whitespace-nowrap px-5 py-3 font-medium text-slate-700">
                                     {{ $log->punched_at?->format('H:i:s') ?? '-' }}
                                 </td>
 
@@ -377,8 +425,8 @@
                                 {{-- STATUS --}}
                                 <td class="whitespace-nowrap px-5 py-3">
 
-                                    <span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                                        {{ $log->status }}
+                                    <span class="inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
+                                        Belum Terdaftar
                                     </span>
 
                                 </td>
@@ -386,13 +434,13 @@
 
                                 {{-- VERIFIKASI --}}
                                 <td class="whitespace-nowrap px-5 py-3 text-slate-600">
-                                    {{ $log->verify }}
+                                    {{ $log->verify ?? '-' }}
                                 </td>
 
 
                                 {{-- DEVICE --}}
                                 <td class="whitespace-nowrap px-5 py-3 text-slate-600">
-                                    {{ $log->device_serial ?? '-' }}
+                                    {{ $log->device_sn ?? '-' }}
                                 </td>
 
                             </tr>
@@ -407,11 +455,13 @@
 
 
             {{-- PAGINATION --}}
-            <div class="border-t border-slate-200 px-6 py-4">
+            @if($logs->hasPages())
 
-                {{ $logs->links() }}
+                <div class="border-t border-slate-200 px-6 py-4">
+                    {{ $logs->links() }}
+                </div>
 
-            </div>
+            @endif
 
         @else
 

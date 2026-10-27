@@ -1,8 +1,8 @@
 <x-guest-layout>
     <div class="space-y-6">
         <div class="text-center md:text-left">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-blue-600">Welcome back</p>
-            <h2 class="mt-3 text-3xl font-bold text-slate-900">Masuk ke akun</h2>
+            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Sistem HRD</p>
+            <h2 class="mt-2 text-2xl font-semibold text-slate-900">Masuk ke akun</h2>
             <p class="mt-2 text-sm text-slate-500">Silakan login untuk mengakses dashboard gaji karyawan.</p>
         </div>
 
@@ -14,7 +14,7 @@
             <div>
                 <label for="email" class="mb-2 block text-sm font-medium text-slate-700">Email</label>
                 <input id="email"
-                    class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100"
+                    class="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     type="email"
                     name="email"
                     value="{{ old('email') }}"
@@ -29,7 +29,7 @@
             <div>
                 <label for="password" class="mb-2 block text-sm font-medium text-slate-700">Password</label>
                 <input id="password"
-                    class="block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-blue-100"
+                    class="block w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 shadow-sm transition focus:border-emerald-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-100"
                     type="password"
                     name="password"
                     required
@@ -41,18 +41,18 @@
 
             <div class="flex items-center justify-between gap-3 pt-1">
                 <label for="remember_me" class="inline-flex items-center gap-2 text-sm text-slate-600">
-                    <input id="remember_me" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-blue-600 shadow-sm focus:ring-blue-500" name="remember">
+                    <input id="remember_me" type="checkbox" class="h-4 w-4 rounded border-slate-300 text-emerald-700 shadow-sm focus:ring-emerald-600" name="remember">
                     <span>Ingat saya</span>
                 </label>
 
                 @if (Route::has('password.request'))
-                    <a class="text-sm font-medium text-blue-600 transition hover:text-blue-700" href="{{ route('password.request') }}">
+                    <a class="text-sm font-medium text-emerald-700 transition hover:text-emerald-800" href="{{ route('password.request') }}">
                         Lupa password?
                     </a>
                 @endif
             </div>
 
-            <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-4 focus:ring-blue-200">
+            <button type="submit" class="inline-flex w-full items-center justify-center rounded-lg bg-emerald-700 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-200">
                 Masuk
             </button>
         </form>

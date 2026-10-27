@@ -1,14 +1,14 @@
 @extends('layouts.app')
 
-@section('title', 'Data Fingerprint')
+@section('title', 'Data Absensi')
 
 @section('content')
 
 <div class="space-y-6">
 
-    {{-- ============================= --}}
+    {{-- ========================================================= --}}
     {{-- HEADER --}}
-    {{-- ============================= --}}
+    {{-- ========================================================= --}}
 
     <div>
         <p class="text-sm font-medium text-blue-600">
@@ -16,108 +16,64 @@
         </p>
 
         <h1 class="mt-1 text-2xl font-bold text-slate-800">
-            Data Fingerprint
+            Data Absensi
         </h1>
 
         <p class="mt-1 text-sm text-slate-500">
-            Data absensi yang diterima dari mesin fingerprint PT Starfood International.
+            Data absensi dari mesin fingerprint, Excel, dan file DAT
+            yang tersimpan di sistem.
         </p>
     </div>
 
 
-    {{-- ============================= --}}
-    {{-- PERINGATAN PIN BELUM TERDAFTAR --}}
-    {{-- ============================= --}}
+    {{-- ========================================================= --}}
+    {{-- SUCCESS --}}
+    {{-- ========================================================= --}}
 
-    @if($belumTerdaftar > 0)
+    @if(session('success'))
 
-        <div class="rounded-2xl border border-red-200 bg-red-50 p-5">
+        <div class="rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+            <p class="text-sm font-medium text-green-700">
+                {{ session('success') }}
+            </p>
+        </div>
 
-            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    @endif
 
-                <div class="flex items-start gap-3">
 
-                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-600">
+    {{-- ========================================================= --}}
+    {{-- ERROR --}}
+    {{-- ========================================================= --}}
 
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="h-5 w-5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                d="M12 9v3.75m0 3.75h.008M10.29 3.86l-8.1 14A2 2 0 003.92 21h16.16a2 2 0 001.73-3.14l-8.1-14a2 2 0 00-3.42 0z"
-                            />
-                        </svg>
+    @if($errors->any())
 
-                    </div>
+        <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3">
 
-                    <div>
+            <p class="mb-2 text-sm font-semibold text-red-700">
+                Terjadi kesalahan:
+            </p>
 
-                        <h3 class="text-sm font-semibold text-red-800">
-                            Ada PIN fingerprint yang belum terdaftar
-                        </h3>
+            <ul class="list-disc space-y-1 pl-5 text-sm text-red-700">
 
-                        <p class="mt-1 text-sm text-red-700">
-                            Terdapat
-                            <span class="font-semibold">
-                                {{ $belumTerdaftar }} PIN
-                            </span>
-                            yang belum terhubung dengan Data Karyawan.
-                        </p>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
 
-                        <p class="mt-1 text-xs text-red-600">
-                            Data scan tetap tersimpan dan akan otomatis terhubung
-                            setelah PIN ditambahkan ke Data Karyawan.
-                        </p>
-
-                    </div>
-
-                </div>
-
-                <a
-                    href="{{ route('attendance.unregistered') }}"
-                    class="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-red-700"
-                >
-
-                    Lihat PIN Belum Terdaftar
-
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M9 5l7 7-7 7"
-                        />
-                    </svg>
-
-                </a>
-
-            </div>
+            </ul>
 
         </div>
 
     @endif
 
 
-    {{-- ============================= --}}
+    {{-- ========================================================= --}}
     {{-- STATISTIK --}}
-    {{-- ============================= --}}
+    {{-- ========================================================= --}}
 
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
 
         {{-- TOTAL SCAN --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
             <div class="flex items-start justify-between">
 
@@ -128,11 +84,11 @@
                     </p>
 
                     <p class="mt-2 text-3xl font-bold text-slate-800">
-                        {{ $totalScan }}
+                        {{ number_format($totalScan) }}
                     </p>
 
                     <p class="mt-1 text-xs text-slate-500">
-                        Seluruh data fingerprint yang tersimpan
+                        Seluruh data absensi
                     </p>
 
                 </div>
@@ -162,7 +118,7 @@
 
 
         {{-- SCAN HARI INI --}}
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
             <div class="flex items-start justify-between">
 
@@ -173,11 +129,11 @@
                     </p>
 
                     <p class="mt-2 text-3xl font-bold text-slate-800">
-                        {{ $scanHariIni }}
+                        {{ number_format($scanHariIni) }}
                     </p>
 
                     <p class="mt-1 text-xs text-slate-500">
-                        Data fingerprint pada hari ini
+                        Scan pada hari ini
                     </p>
 
                 </div>
@@ -205,328 +161,33 @@
 
         </div>
 
-    </div>
 
+        {{-- TOTAL TERDAFTAR --}}
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
 
-    {{-- ============================= --}}
-    {{-- FILTER --}}
-    {{-- ============================= --}}
+            <div class="flex items-start justify-between">
 
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-        <div class="mb-5">
-
-            <h3 class="text-base font-semibold text-slate-800">
-                Filter Data
-            </h3>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Cari data fingerprint berdasarkan PIN atau tanggal.
-            </p>
-
-        </div>
-
-        <form
-            method="GET"
-            action="{{ route('attendance.index') }}"
-        >
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-
-                {{-- PIN --}}
                 <div>
 
-                    <label
-                        for="search"
-                        class="mb-1.5 block text-sm font-medium text-slate-700"
-                    >
-                        PIN Fingerprint
-                    </label>
+                    <p class="text-sm font-medium text-slate-500">
+                        Scan Terdaftar
+                    </p>
 
-                    <input
-                        type="text"
-                        id="search"
-                        name="search"
-                        placeholder="Cari PIN..."
-                        value="{{ request('search') }}"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    >
+                    <p class="mt-2 text-3xl font-bold text-slate-800">
+                        {{ number_format($totalTerdaftar) }}
+                    </p>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                        Terhubung dengan Data Karyawan
+                    </p>
 
                 </div>
 
-
-                {{-- TANGGAL --}}
-                <div>
-
-                    <label
-                        for="tanggal"
-                        class="mb-1.5 block text-sm font-medium text-slate-700"
-                    >
-                        Tanggal
-                    </label>
-
-                    <input
-                        type="date"
-                        id="tanggal"
-                        name="tanggal"
-                        value="{{ request('tanggal') }}"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    >
-
-                </div>
-
-
-                {{-- TOMBOL --}}
-                <div class="flex items-end gap-2 md:col-span-2 xl:col-span-2">
-
-                    <button
-                        type="submit"
-                        class="inline-flex h-[42px] items-center justify-center rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700"
-                    >
-                        Cari
-                    </button>
-
-                    <a
-                        href="{{ route('attendance.index') }}"
-                        class="inline-flex h-[42px] items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                        Reset
-                    </a>
-
-                </div>
-
-            </div>
-
-        </form>
-
-    </div>
-
-
-    {{-- ============================= --}}
-    {{-- TABEL DATA FINGERPRINT --}}
-    {{-- ============================= --}}
-
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-        <div class="border-b border-slate-200 px-6 py-5">
-
-            <h3 class="text-base font-semibold text-slate-800">
-                Riwayat Scan Fingerprint
-            </h3>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Data yang diterima dari mesin fingerprint.
-            </p>
-
-        </div>
-
-
-        @if($logs->count())
-
-            <div class="w-full overflow-x-auto">
-
-                <table class="min-w-[1050px] w-full text-left text-sm">
-
-                    <thead class="border-b border-slate-200 bg-slate-50">
-
-                        <tr>
-
-                            <th class="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
-                                No
-                            </th>
-
-                            <th class="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
-                                PIN
-                            </th>
-
-                            <th class="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
-                                Nama Karyawan
-                            </th>
-
-                            <th class="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
-                                Tanggal
-                            </th>
-
-                            <th class="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
-                                Waktu
-                            </th>
-
-                            <th class="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
-                                Status
-                            </th>
-
-                            <th class="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
-                                Verifikasi
-                            </th>
-
-                            <th class="whitespace-nowrap px-5 py-3 font-semibold text-slate-600">
-                                Device
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody class="divide-y divide-slate-100">
-
-                        @forelse($logs as $log)
-
-                            @php
-                                $isUnregistered = !$log->employee;
-                            @endphp
-
-                            <tr class="transition {{ $isUnregistered ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-slate-50' }}">
-
-                                {{-- NO --}}
-                                <td class="whitespace-nowrap px-5 py-3 {{ $isUnregistered ? 'text-red-500' : 'text-slate-500' }}">
-                                    {{ $logs->firstItem() + $loop->index }}
-                                </td>
-
-
-                                {{-- PIN --}}
-                                <td class="whitespace-nowrap px-5 py-3">
-
-                                    <span class="rounded-md px-2.5 py-1 font-semibold
-                                        {{ $isUnregistered
-                                            ? 'bg-red-100 text-red-700'
-                                            : 'bg-slate-100 text-slate-700'
-                                        }}">
-                                        {{ $log->pin }}
-                                    </span>
-
-                                </td>
-
-
-                                {{-- NAMA --}}
-                                <td class="px-5 py-3">
-
-                                    @if($log->employee)
-
-                                        <span class="font-medium text-slate-800">
-                                            {{ $log->employee->name }}
-                                        </span>
-
-                                    @else
-
-                                        <div class="flex flex-col gap-1">
-
-                                            <span class="inline-flex w-fit rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-700">
-                                                Belum terdaftar
-                                            </span>
-
-                                            <span class="text-xs text-red-600">
-                                                Tambahkan PIN ini ke Data Karyawan
-                                            </span>
-
-                                        </div>
-
-                                    @endif
-
-                                </td>
-
-
-                                {{-- TANGGAL --}}
-                                <td class="whitespace-nowrap px-5 py-3 text-slate-600">
-                                    {{ $log->punched_at?->format('d-m-Y') ?? '-' }}
-                                </td>
-
-
-                                {{-- WAKTU --}}
-                                <td class="whitespace-nowrap px-5 py-3 text-slate-600">
-                                    {{ $log->punched_at?->format('H:i:s') ?? '-' }}
-                                </td>
-
-
-                                {{-- STATUS --}}
-                                <td class="whitespace-nowrap px-5 py-3">
-
-                                    <span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                                        {{ $log->status }}
-                                    </span>
-
-                                </td>
-
-
-                                {{-- VERIFIKASI --}}
-                                <td class="whitespace-nowrap px-5 py-3 text-slate-600">
-                                    {{ $log->verify }}
-                                </td>
-
-
-                                {{-- DEVICE --}}
-                                <td class="whitespace-nowrap px-5 py-3 text-slate-600">
-                                    {{ $log->device_serial ?? '-' }}
-                                </td>
-
-                            </tr>
-
-                        @empty
-
-                            <tr>
-
-                                <td
-                                    colspan="8"
-                                    class="px-6 py-12 text-center"
-                                >
-
-                                    <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            class="h-7 w-7"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                            stroke-width="1.8"
-                                        >
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h6.586a1 1 0 01.707.293l3.414 3.414A1 1 0 0119 7.414V19a2 2 0 01-2 2Z"
-                                            />
-                                        </svg>
-
-                                    </div>
-
-                                    <p class="mt-4 text-sm font-medium text-slate-700">
-                                        Belum ada data fingerprint
-                                    </p>
-
-                                    <p class="mt-1 text-sm text-slate-500">
-                                        Data absensi dari mesin fingerprint belum tersedia.
-                                    </p>
-
-                                </td>
-
-                            </tr>
-
-                        @endforelse
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-            {{-- PAGINATION --}}
-            <div class="border-t border-slate-200 px-6 py-4">
-
-                {{ $logs->links() }}
-
-            </div>
-
-        @else
-
-            {{-- EMPTY STATE --}}
-            <div class="px-6 py-16 text-center">
-
-                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-green-50 text-green-600">
 
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        class="h-7 w-7"
+                        class="h-6 w-6"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -535,20 +196,744 @@
                         <path
                             stroke-linecap="round"
                             stroke-linejoin="round"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h6.586a1 1 0 01.707.293l3.414 3.414A1 1 0 0119 7.414V19a2 2 0 01-2 2Z"
+                            d="M5 13l4 4L19 7"
                         />
                     </svg>
 
                 </div>
 
-                <p class="mt-4 text-sm font-medium text-slate-700">
-                    Belum ada data fingerprint
-                </p>
+            </div>
 
-                <p class="mt-1 text-sm text-slate-500">
-                    Data absensi dari mesin fingerprint belum tersedia.
-                </p>
+        </div>
 
+
+        {{-- PIN BELUM TERDAFTAR --}}
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+            <div class="flex items-start justify-between">
+
+                <div>
+
+                    <p class="text-sm font-medium text-slate-500">
+                        PIN Belum Terdaftar
+                    </p>
+
+                    <p class="mt-2 text-3xl font-bold text-slate-800">
+                        {{ number_format($totalBelumTerdaftar) }}
+                    </p>
+
+                    <p class="mt-1 text-xs text-slate-500">
+                        Belum ditemukan di Data Karyawan
+                    </p>
+
+                </div>
+
+                <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-6 w-6"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 9v4m0 4h.01M10.3 3.7l-7.6 13.2A2 2 0 004.4 20h15.2a2 2 0 001.7-3.1L13.7 3.7a2 2 0 00-3.4 0z"
+                        />
+                    </svg>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    {{-- ========================================================= --}}
+    {{-- PIN BELUM TERDAFTAR --}}
+    {{-- ========================================================= --}}
+
+    @if($unregisteredPins->count() > 0)
+
+        <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
+
+            <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+
+                <div>
+
+                    <p class="font-semibold text-amber-800">
+                        Ada PIN yang belum terdaftar
+                    </p>
+
+                    <p class="mt-1 text-sm text-amber-700">
+                        Terdapat
+                        <span class="font-semibold">
+                            {{ $unregisteredPins->count() }}
+                        </span>
+                        PIN yang belum ditemukan pada Data Karyawan.
+                    </p>
+
+                    <div class="mt-3 flex flex-wrap gap-2">
+
+                        @foreach($unregisteredPins as $pin)
+
+                            <span class="rounded-full bg-white px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+                                {{ $pin }}
+                            </span>
+
+                        @endforeach
+
+                    </div>
+
+                </div>
+
+                <a
+                    href="{{ route('attendance.unregistered') }}"
+                    class="inline-flex shrink-0 items-center justify-center rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-amber-700"
+                >
+                    Lihat PIN
+                </a>
+
+            </div>
+
+        </div>
+
+    @endif
+
+
+    {{{-- ========================================================= --}}
+{{-- IMPORT DATA --}}
+{{-- ========================================================= --}}
+
+<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+    <div class="mb-5">
+        <h2 class="text-base font-semibold text-slate-800">
+            Import Data Absensi
+        </h2>
+
+        <p class="mt-1 text-sm text-slate-500">
+            Masukkan data absensi dari file Excel atau hasil export mesin fingerprint.
+        </p>
+    </div>
+
+
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+        {{-- ================================================= --}}
+        {{-- IMPORT EXCEL --}}
+        {{-- ================================================= --}}
+
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+
+            <div class="mb-4">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M7 3h8l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2z"
+                            />
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M15 3v5h5"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <div>
+
+                        <h3 class="font-semibold text-slate-800">
+                            Import Excel
+                        </h3>
+
+                        <p class="text-xs text-slate-500">
+                            File .xlsx, .xls, atau .csv
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <form
+                action="{{ route('attendance.import.excel') }}"
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                @csrf
+
+                <div class="flex flex-col gap-3">
+
+                    <input
+                        type="file"
+                        name="file"
+                        accept=".xlsx,.xls,.csv"
+                        required
+                        class="block w-full rounded-lg border border-slate-300
+                               bg-white text-sm text-slate-600
+                               file:mr-3
+                               file:border-0
+                               file:bg-slate-100
+                               file:px-4
+                               file:py-2.5
+                               file:text-sm
+                               file:font-medium
+                               file:text-slate-700
+                               hover:file:bg-slate-200"
+                    >
+
+                    <button
+                        type="submit"
+                        class="inline-flex items-center justify-center
+                               rounded-lg bg-blue-600 px-4 py-2.5
+                               text-sm font-semibold text-white
+                               transition hover:bg-blue-700"
+                    >
+                        Import Excel
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+
+        {{-- ================================================= --}}
+        {{-- IMPORT DAT --}}
+        {{-- ================================================= --}}
+
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+
+            <div class="mb-4">
+
+                <div class="flex items-center gap-3">
+
+                    <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-100 text-purple-600">
+
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M7 3h8l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2z"
+                            />
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M15 3v5h5"
+                            />
+                        </svg>
+
+                    </div>
+
+                    <div>
+
+                        <h3 class="font-semibold text-slate-800">
+                            Import DAT
+                        </h3>
+
+                        <p class="text-xs text-slate-500">
+                            File hasil export mesin fingerprint
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <form
+                action="{{ route('attendance.import.dat') }}"
+                method="POST"
+                enctype="multipart/form-data"
+            >
+
+                @csrf
+
+                <div class="flex flex-col gap-3">
+
+                    <input
+                        type="file"
+                        name="file"
+                        accept=".dat"
+                        required
+                        class="block w-full rounded-lg border border-slate-300
+                               bg-white text-sm text-slate-600
+                               file:mr-3
+                               file:border-0
+                               file:bg-slate-100
+                               file:px-4
+                               file:py-2.5
+                               file:text-sm
+                               file:font-medium
+                               file:text-slate-700
+                               hover:file:bg-slate-200"
+                    >
+
+                    <button
+                        type="submit"
+                        class="inline-flex items-center justify-center
+                               rounded-lg bg-purple-600 px-4 py-2.5
+                               text-sm font-semibold text-white
+                               transition hover:bg-purple-700"
+                    >
+                        Import DAT
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+    {{-- ========================================================= --}}
+    {{-- FILTER --}}
+    {{-- ========================================================= --}}
+
+    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+
+        <div class="mb-5">
+
+            <h2 class="text-base font-semibold text-slate-800">
+                Filter Data
+            </h2>
+
+            <p class="mt-1 text-sm text-slate-500">
+                Cari dan filter data absensi berdasarkan periode,
+                sumber data, PIN, atau nama karyawan.
+            </p>
+
+        </div>
+
+
+        <form
+            method="GET"
+            action="{{ route('attendance.index') }}"
+        >
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+
+                {{-- TANGGAL MULAI --}}
+                <div>
+
+                    <label
+                        for="tanggal_mulai"
+                        class="mb-1.5 block text-sm font-medium text-slate-700"
+                    >
+                        Tanggal Mulai
+                    </label>
+
+                    <input
+                        type="date"
+                        id="tanggal_mulai"
+                        name="tanggal_mulai"
+                        value="{{ request('tanggal_mulai') }}"
+                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+
+                </div>
+
+
+                {{-- TANGGAL SELESAI --}}
+                <div>
+
+                    <label
+                        for="tanggal_selesai"
+                        class="mb-1.5 block text-sm font-medium text-slate-700"
+                    >
+                        Tanggal Selesai
+                    </label>
+
+                    <input
+                        type="date"
+                        id="tanggal_selesai"
+                        name="tanggal_selesai"
+                        value="{{ request('tanggal_selesai') }}"
+                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+
+                </div>
+
+
+                {{-- SOURCE --}}
+                <div>
+
+                    <label
+                        for="source"
+                        class="mb-1.5 block text-sm font-medium text-slate-700"
+                    >
+                        Source
+                    </label>
+
+                    <select
+                        id="source"
+                        name="source"
+                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+
+                        <option value="">
+                            Semua Source
+                        </option>
+
+                        <option
+                            value="excel"
+                            @selected(request('source') === 'excel')
+                        >
+                            Excel
+                        </option>
+
+                        <option
+                            value="dat"
+                            @selected(request('source') === 'dat')
+                        >
+                            DAT
+                        </option>
+
+                        <option
+                            value="adms"
+                            @selected(request('source') === 'adms')
+                        >
+                            Fingerprint
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                {{-- SEARCH --}}
+                <div>
+
+                    <label
+                        for="search"
+                        class="mb-1.5 block text-sm font-medium text-slate-700"
+                    >
+                        Cari
+                    </label>
+
+                    <input
+                        type="text"
+                        id="search"
+                        name="search"
+                        value="{{ request('search') }}"
+                        placeholder="PIN atau nama..."
+                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    >
+
+                </div>
+
+            </div>
+
+
+            {{-- BUTTON --}}
+            <div class="mt-5 flex gap-2">
+
+                <button
+                    type="submit"
+                    class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                    Terapkan Filter
+                </button>
+
+                <a
+                    href="{{ route('attendance.index') }}"
+                    class="inline-flex items-center justify-center rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                >
+                    Reset
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+    {{-- ========================================================= --}}
+    {{-- DATA TABLE --}}
+    {{-- ========================================================= --}}
+
+    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+
+        <div class="border-b border-slate-200 px-6 py-5">
+
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+
+                    <h2 class="text-base font-semibold text-slate-800">
+                        Data Absensi
+                    </h2>
+
+                    <p class="mt-1 text-sm text-slate-500">
+                        Menampilkan data scan fingerprint yang tersimpan.
+                    </p>
+
+                </div>
+
+                <div class="text-sm text-slate-500">
+
+                    Total:
+                    <span class="font-semibold text-slate-700">
+                        {{ number_format($attendanceLogs->total()) }}
+                    </span>
+                    data
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="overflow-x-auto">
+
+            <table class="min-w-full text-sm">
+
+                <thead class="bg-slate-50">
+
+                    <tr class="border-b border-slate-200">
+
+                        <th class="whitespace-nowrap px-6 py-4 text-left font-semibold text-slate-700">
+                            PIN
+                        </th>
+
+                        <th class="whitespace-nowrap px-6 py-4 text-left font-semibold text-slate-700">
+                            Nama
+                        </th>
+
+                        <th class="whitespace-nowrap px-6 py-4 text-left font-semibold text-slate-700">
+                            Departemen
+                        </th>
+
+                        <th class="whitespace-nowrap px-6 py-4 text-left font-semibold text-slate-700">
+                            Jenis Karyawan
+                        </th>
+
+                        <th class="whitespace-nowrap px-6 py-4 text-left font-semibold text-slate-700">
+                            Tanggal
+                        </th>
+
+                        <th class="whitespace-nowrap px-6 py-4 text-left font-semibold text-slate-700">
+                            Jam
+                        </th>
+
+                        <th class="whitespace-nowrap px-6 py-4 text-left font-semibold text-slate-700">
+                            Source
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody class="divide-y divide-slate-100">
+
+                    @forelse($attendanceLogs as $attendance)
+
+                        <tr class="transition hover:bg-slate-50">
+
+                            {{-- PIN --}}
+                            <td class="whitespace-nowrap px-6 py-4">
+
+                                <span class="font-semibold text-slate-800">
+                                    {{ $attendance->pin }}
+                                </span>
+                            </td>
+
+
+                            {{-- NAMA --}}
+                            <td class="whitespace-nowrap px-6 py-4">
+
+                                @if($attendance->employee)
+
+                                    <span class="font-medium text-slate-700">
+                                        {{ $attendance->employee->name }}
+                                    </span>
+
+                                @else
+
+                                    <span class="text-red-500">
+                                        Belum terdaftar
+                                    </span>
+
+                                @endif
+
+                            </td>
+
+
+                            {{-- DEPARTEMEN --}}
+                            <td class="whitespace-nowrap px-6 py-4 text-slate-600">
+
+                                {{ $attendance->employee?->bagian ?? '-' }}
+
+                            </td>
+
+
+                            {{-- JENIS KARYAWAN --}}
+                            <td class="whitespace-nowrap px-6 py-4">
+
+                                @if($attendance->employee?->jenis_karyawan)
+
+                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                                        {{ $attendance->employee->jenis_karyawan }}
+                                    </span>
+
+                                @else
+
+                                    <span class="text-slate-400">
+                                        -
+                                    </span>
+
+                                @endif
+
+                            </td>
+
+
+                            {{-- TANGGAL --}}
+                            <td class="whitespace-nowrap px-6 py-4 text-slate-600">
+
+                                {{ $attendance->punched_at?->format('d/m/Y') ?? '-' }}
+
+                            </td>
+
+
+                            {{-- JAM --}}
+                            <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-700">
+
+                                {{ $attendance->punched_at?->format('H:i:s') ?? '-' }}
+
+                            </td>
+
+
+                            {{-- SOURCE --}}
+                            <td class="whitespace-nowrap px-6 py-4">
+
+                                @if($attendance->source === 'excel')
+
+                                    <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                                        Excel
+                                    </span>
+
+                                @elseif($attendance->source === 'dat')
+
+                                    <span class="rounded-full bg-purple-50 px-3 py-1 text-xs font-medium text-purple-700">
+                                        DAT
+                                    </span>
+
+                                @elseif($attendance->source === 'adms')
+
+                                    <span class="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+                                        Fingerprint
+                                    </span>
+
+                                @else
+
+                                    <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                                        {{ $attendance->source ?? '-' }}
+                                    </span>
+
+                                @endif
+
+                            </td>
+
+                        </tr>
+
+                    @empty
+
+                        <tr>
+
+                            <td
+                                colspan="7"
+                                class="px-6 py-16 text-center"
+                            >
+
+                                <div class="flex flex-col items-center">
+
+                                    <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            class="h-6 w-6"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                            stroke-width="1.8"
+                                        >
+                                            <path
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0H4"
+                                            />
+                                        </svg>
+
+                                    </div>
+
+                                    <p class="mt-3 font-medium text-slate-700">
+                                        Belum ada data absensi
+                                    </p>
+
+                                    <p class="mt-1 text-sm text-slate-500">
+                                        Data fingerprint akan muncul di sini.
+                                    </p>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    @endforelse
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        {{-- PAGINATION --}}
+        @if($attendanceLogs->hasPages())
+
+            <div class="border-t border-slate-200 px-6 py-4">
+                {{ $attendanceLogs->links() }}
             </div>
 
         @endif

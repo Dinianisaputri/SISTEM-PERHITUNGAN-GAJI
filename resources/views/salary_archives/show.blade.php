@@ -1,536 +1,222 @@
+
 @extends('layouts.app')
 
 @section('title', 'Detail Arsip Gaji')
 
 @section('content')
-
 <div class="space-y-6">
 
-    {{-- ============================= --}}
     {{-- HEADER --}}
-    {{-- ============================= --}}
-
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-            <p class="text-sm font-medium text-blue-600">
-                GAJI KARYAWAN
-            </p>
-
-            <h1 class="mt-1 text-2xl font-bold text-slate-800">
+            <h1 class="text-2xl font-semibold text-gray-800">
                 Detail Arsip Gaji
             </h1>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Detail data perhitungan gaji karyawan borongan.
+            <p class="mt-1 text-sm text-gray-500">
+                {{ $salaryArchive->archive_name }}
             </p>
         </div>
 
-        <a
-            href="{{ route('salary_archives.index') }}"
-            class="inline-flex w-fit items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-        >
-            ← Kembali
-        </a>
-
-    </div>
-
-
-    {{-- ============================= --}}
-    {{-- INFORMASI ARSIP --}}
-    {{-- ============================= --}}
-
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-        <div class="mb-5">
-            <h3 class="text-base font-semibold text-slate-800">
-                Informasi Arsip
-            </h3>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Informasi periode dan jumlah data dalam arsip gaji.
-            </p>
-        </div>
-
-        <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-
-            {{-- NAMA ARSIP --}}
-            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Nama Arsip
-                </p>
-
-                <p class="mt-2 font-semibold text-slate-800">
-                    {{ $salaryArchive->archive_name }}
-                </p>
-            </div>
-
-
-            {{-- PERIODE --}}
-            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Periode
-                </p>
-
-                <p class="mt-2 font-semibold text-slate-800">
-                    {{ $salaryArchive->start_date->format('d/m/Y') }}
-                    <span class="font-normal text-slate-500">s/d</span>
-                    {{ $salaryArchive->end_date->format('d/m/Y') }}
-                </p>
-            </div>
-
-
-            {{-- TOTAL KARYAWAN --}}
-            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Total Karyawan
-                </p>
-
-                <p class="mt-2 font-semibold text-slate-800">
-                    {{ $salaryArchive->total_employees }}
-                    <span class="font-normal text-slate-500">orang</span>
-                </p>
-            </div>
-
-
-            {{-- TOTAL CHECKLOG --}}
-            <div class="rounded-xl border border-slate-100 bg-slate-50 p-4">
-                <p class="text-xs font-medium uppercase tracking-wide text-slate-500">
-                    Total Checklog
-                </p>
-
-                <p class="mt-2 font-semibold text-slate-800">
-                    {{ $salaryArchive->total_checklogs }}
-                    <span class="font-normal text-slate-500">data</span>
-                </p>
-            </div>
-
-        </div>
-
-    </div>
-
-
-    {{-- ============================= --}}
-    {{-- TOTAL GAJI --}}
-    {{-- ============================= --}}
-
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-        <div>
-            <p class="text-sm font-medium text-slate-500">
-                Total Gaji Arsip
-            </p>
-
-            <p class="mt-2 text-3xl font-bold text-slate-800">
-                Rp {{ number_format((float) $salaryArchive->total_salary, 0, ',', '.') }}
-            </p>
-
-            <p class="mt-1 text-xs text-slate-500">
-                Total gaji berdasarkan data yang tersimpan dalam arsip.
-            </p>
-        </div>
-
-    </div>
-
-
-    {{-- ============================= --}}
-    {{-- FILTER DATA ARSIP --}}
-    {{-- ============================= --}}
-
-    <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-
-        <div class="mb-5">
-            <h3 class="text-base font-semibold text-slate-800">
-                Filter Data
-            </h3>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Gunakan filter untuk mencari data checklog tertentu.
-            </p>
-        </div>
-
-
-        <form
-            action="{{ route('salary_archives.show', $salaryArchive) }}"
-            method="GET"
-        >
-
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-
-                {{-- DARI TANGGAL --}}
-                <div>
-                    <label
-                        for="filter_tanggal_mulai"
-                        class="mb-1.5 block text-sm font-medium text-slate-700"
-                    >
-                        Dari Tanggal
-                    </label>
-
-                    <input
-                        type="date"
-                        id="filter_tanggal_mulai"
-                        name="filter_tanggal_mulai"
-                        value="{{ request('filter_tanggal_mulai') }}"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    >
-                </div>
-
-
-                {{-- SAMPAI TANGGAL --}}
-                <div>
-                    <label
-                        for="filter_tanggal_selesai"
-                        class="mb-1.5 block text-sm font-medium text-slate-700"
-                    >
-                        Sampai Tanggal
-                    </label>
-
-                    <input
-                        type="date"
-                        id="filter_tanggal_selesai"
-                        name="filter_tanggal_selesai"
-                        value="{{ request('filter_tanggal_selesai') }}"
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    >
-                </div>
-
-
-                {{-- NAMA KARYAWAN --}}
-                <div class="md:col-span-2 xl:col-span-1">
-                    <label
-                        for="nama_karyawan"
-                        class="mb-1.5 block text-sm font-medium text-slate-700"
-                    >
-                        Nama Karyawan
-                    </label>
-
-                    <input
-                        type="text"
-                        id="nama_karyawan"
-                        name="nama_karyawan"
-                        value="{{ request('nama_karyawan') }}"
-                        placeholder="Cari nama karyawan..."
-                        class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                    >
-                </div>
-
-
-                {{-- CARI --}}
-                <button
-                    type="submit"
-                    class="inline-flex h-[42px] items-center justify-center rounded-lg bg-blue-600 px-5 text-sm font-semibold text-white transition hover:bg-blue-700"
-                >
-                    Cari
-                </button>
-
-
-                {{-- RESET --}}
+        <div class="flex flex-wrap items-center gap-2">
+            @if ($salaryArchive->archive_type === 'salary')
                 <a
-                    href="{{ route('salary_archives.show', $salaryArchive) }}"
-                    class="inline-flex h-[42px] items-center justify-center rounded-lg border border-slate-300 bg-white px-5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    href="{{ route('salary_archives.slipPdf', $salaryArchive->id) }}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-700"
                 >
-                    Reset
+                    Cetak Semua Slip Gaji (PDF)
                 </a>
 
-            </div>
-
-        </form>
-
+                <a
+                    href="{{ route('salary_archives.exportFinance', $salaryArchive->id) }}"
+                    class="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                >
+                    Export Data Gaji (Excel)
+                </a>
+            @endif
+        </div>
     </div>
 
+    {{-- RINGKASAN ARSIP --}}
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 
-    {{-- ============================= --}}
-    {{-- PESAN --}}
-    {{-- ============================= --}}
-
-    @if(session('success'))
-
-        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-            {{ session('success') }}
-        </div>
-
-    @endif
-
-
-    {{-- ============================= --}}
-    {{-- DATA CHECKLOG --}}
-    {{-- ============================= --}}
-
-    <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-
-        <div class="border-b border-slate-200 px-6 py-5">
-
-            <h3 class="text-base font-semibold text-slate-800">
-                Data Checklog
-            </h3>
-
-            <p class="mt-1 text-sm text-slate-500">
-                Data kehadiran yang termasuk dalam arsip ini.
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p class="text-sm text-gray-500">Periode</p>
+            <p class="mt-2 font-semibold text-gray-800">
+                {{ $salaryArchive->start_date
+                    ? \Carbon\Carbon::parse($salaryArchive->start_date)->format('d-m-Y')
+                    : '-' }}
+                s.d.
+                {{ $salaryArchive->end_date
+                    ? \Carbon\Carbon::parse($salaryArchive->end_date)->format('d-m-Y')
+                    : '-' }}
             </p>
-
         </div>
 
-
-        @if($checklogs->count())
-
-            {{-- TABLE --}}
-            <div class="w-full overflow-x-auto">
-
-                <table class="min-w-[1250px] w-full text-left text-sm">
-
-                    <thead class="border-b border-slate-200 bg-slate-50">
-
-                        <tr>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                No
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                No. ID
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Nama
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Tanggal
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Jam Masuk
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Jam Pulang
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Scan Masuk
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Scan Pulang
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Istirahat
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Total Jam Kerja
-                            </th>
-
-                            <th class="px-4 py-3 font-semibold text-slate-600">
-                                Gaji
-                            </th>
-
-                            <th class="px-4 py-3 text-center font-semibold text-slate-600">
-                                Aksi
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody class="divide-y divide-slate-100">
-
-                        @forelse($checklogs as $checklog)
-
-                            <tr class="transition hover:bg-slate-50">
-
-                                {{-- NO --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ $loop->iteration }}
-                                </td>
-
-
-                                {{-- NO ID --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ $checklog->employee->no_id ?? '-' }}
-                                </td>
-
-
-                                {{-- NAMA --}}
-                                <td class="whitespace-nowrap px-4 py-3 font-medium text-slate-800">
-                                    {{ $checklog->employee->name ?? '-' }}
-                                </td>
-
-
-                                {{-- TANGGAL --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ $checklog->tanggal->format('d/m/Y') }}
-                                </td>
-
-
-                                {{-- JAM MASUK --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ $checklog->jam_masuk ?? '-' }}
-                                </td>
-
-
-                                {{-- JAM PULANG --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ $checklog->jam_pulang ?? '-' }}
-                                </td>
-
-
-                                {{-- SCAN MASUK --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ $checklog->scan_masuk ?? '-' }}
-                                </td>
-
-
-                                {{-- SCAN PULANG --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ $checklog->scan_pulang ?? '-' }}
-                                </td>
-
-
-                                {{-- ISTIRAHAT --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ number_format((float) $checklog->jam_istirahat, 2, '.', '') }}
-                                    jam
-                                </td>
-
-
-                                {{-- TOTAL JAM KERJA --}}
-                                <td class="whitespace-nowrap px-4 py-3 text-slate-600">
-                                    {{ number_format((float) $checklog->total_jam_kerja, 2, ',', '.') }}
-                                    jam
-                                </td>
-
-
-                                {{-- GAJI --}}
-                                <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-800">
-                                    Rp {{ number_format((float) $checklog->gaji, 0, ',', '.') }}
-                                </td>
-
-
-                                {{-- AKSI --}}
-                                <td class="px-4 py-3">
-
-                                    <div class="flex items-center justify-center gap-2">
-
-                                        {{-- EDIT --}}
-                                        <a
-                                            href="{{ route(
-                                                'salary_archives.editChecklog',
-                                                [$salaryArchive, $checklog]
-                                            ) }}"
-                                            class="inline-flex items-center rounded-lg bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-600"
-                                        >
-                                            Edit
-                                        </a>
-
-
-                                        {{-- HAPUS --}}
-                                        <form
-                                            action="{{ route(
-                                                'salary_archives.destroyChecklog',
-                                                [$salaryArchive, $checklog]
-                                            ) }}"
-                                            method="POST"
-                                            onsubmit="return confirm('Yakin ingin menghapus data checklog ini?')"
-                                        >
-
-                                            @csrf
-                                            @method('DELETE')
-
-                                            <button
-                                                type="submit"
-                                                class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700"
-                                            >
-                                                Hapus
-                                            </button>
-
-                                        </form>
-
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                        @empty
-
-                            <tr>
-
-                                <td
-                                    colspan="12"
-                                    class="px-6 py-12 text-center text-sm text-slate-500"
-                                >
-                                    Tidak ada data checklog yang sesuai dengan filter.
-                                </td>
-
-                            </tr>
-
-                        @endforelse
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        @else
-
-            <div class="px-6 py-16 text-center">
-
-                <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-100 text-slate-400">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-7 w-7"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="1.8"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6.586a1 1 0 0 1 .707.293l3.414 3.414A1 1 0 0 1 19 7.414V19a2 2 0 0 1-2 2Z"
-                        />
-                    </svg>
-                </div>
-
-                <p class="mt-4 text-sm font-medium text-slate-700">
-                    Tidak ada data checklog
-                </p>
-
-                <p class="mt-1 text-sm text-slate-500">
-                    Tidak ada data yang sesuai dengan filter.
-                </p>
-
-            </div>
-
-        @endif
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p class="text-sm text-gray-500">Jumlah Karyawan</p>
+            <p class="mt-2 text-2xl font-semibold text-gray-800">
+                {{ $salaryArchive->total_employees ?? 0 }}
+            </p>
+        </div>
+
+        <div class="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
+            <p class="text-sm text-gray-500">Total Gaji</p>
+            <p class="mt-2 text-xl font-semibold text-gray-800">
+                Rp {{ number_format((float) $salaryArchive->total_salary, 0, ',', '.') }}
+            </p>
+        </div>
 
     </div>
 
+    {{-- TABEL DETAIL ARSIP --}}
+    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+        <table class="min-w-full text-sm">
 
-    {{-- ============================= --}}
-    {{-- FOOTER TOTAL --}}
-    {{-- ============================= --}}
+            <thead class="bg-gray-50">
+                <tr class="text-left text-gray-600">
+                    <th class="px-4 py-3">No.</th>
 
-    <div class="flex justify-end">
+                    @if ($salaryArchive->archive_type === 'salary')
+                        <th class="px-4 py-3">PIN</th>
+                        <th class="px-4 py-3">Karyawan</th>
+                        <th class="px-4 py-3">Bagian</th>
+                        <th class="px-4 py-3">Hari Hadir</th>
+                        <th class="px-4 py-3">Jam Kerja</th>
+                        <th class="px-4 py-3">Gaji Pokok</th>
+                        <th class="px-4 py-3">Total Lembur</th>
+                        <th class="px-4 py-3">Potongan</th>
+                        <th class="px-4 py-3">Gaji Bersih</th>
+                        <th class="px-4 py-3">Aksi</th>
+                    @else
+                        <th class="px-4 py-3">Tanggal</th>
+                        <th class="px-4 py-3">Karyawan</th>
+                        <th class="px-4 py-3">Jam Masuk</th>
+                        <th class="px-4 py-3">Jam Pulang</th>
+                        <th class="px-4 py-3">Jam Kerja</th>
+                        <th class="px-4 py-3">Gaji</th>
+                    @endif
+                </tr>
+            </thead>
 
-        <div class="rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <tbody class="divide-y divide-gray-100">
 
-            <span class="text-sm text-slate-500">
-                Total Gaji:
-            </span>
+                {{-- ARSIP GAJI --}}
+                @if ($salaryArchive->archive_type === 'salary')
 
-            <strong class="ml-2 text-lg font-bold text-slate-800">
-                Rp {{ number_format((float) $salaryArchive->total_salary, 0, ',', '.') }}
-            </strong>
+                    @forelse ($archiveDetails as $detail)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                {{ $loop->iteration }}
+                            </td>
 
-        </div>
+                            <td class="px-4 py-3">
+                                {{ $detail->fingerprint_pin ?? '-' }}
+                            </td>
 
+                            <td class="px-4 py-3">
+                                {{ $detail->employee_name ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $detail->bagian ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $detail->hari_hadir ?? 0 }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ number_format((float) ($detail->jam_kerja ?? 0), 2, ',', '.') }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                Rp {{ number_format((float) ($detail->gaji_pokok ?? 0), 0, ',', '.') }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                Rp {{ number_format((float) ($detail->total_lembur ?? 0), 0, ',', '.') }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                Rp {{ number_format((float) ($detail->total_potongan ?? 0), 0, ',', '.') }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3 font-semibold">
+                                Rp {{ number_format((float) ($detail->gaji_bersih ?? 0), 0, ',', '.') }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                <a
+                                    href="{{ route('salary_archives.details.edit', [
+                                        'salaryArchive' => $salaryArchive->id,
+                                        'detail' => $detail->id,
+                                    ]) }}"
+                                    class="inline-flex rounded-lg border border-teal-700 px-3 py-1.5 text-sm font-medium text-teal-700 hover:bg-teal-50"
+                                >
+                                    Edit
+                                </a>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="11" class="px-4 py-10 text-center text-gray-500">
+                                Belum ada detail gaji pada arsip ini.
+                            </td>
+                        </tr>
+                    @endforelse
+
+                {{-- ARSIP CHECKLOG --}}
+                @else
+
+                    @forelse ($checklogs as $checklog)
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-4 py-3">
+                                {{ $loop->iteration }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                {{ $checklog->tanggal
+                                    ? \Carbon\Carbon::parse($checklog->tanggal)->format('d-m-Y')
+                                    : '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $checklog->employee->name
+                                    ?? $checklog->nama_karyawan
+                                    ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $checklog->scan_masuk ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $checklog->scan_pulang ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                {{ $checklog->total_jam_kerja ?? 0 }} jam
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                Rp {{ number_format((float) ($checklog->gaji ?? 0), 0, ',', '.') }}
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="7" class="px-4 py-10 text-center text-gray-500">
+                                Belum ada detail checklog pada arsip ini.
+                            </td>
+                        </tr>
+                    @endforelse
+
+                @endif
+
+            </tbody>
+        </table>
     </div>
 
 </div>
-
 @endsection
