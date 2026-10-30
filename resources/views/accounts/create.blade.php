@@ -4,19 +4,19 @@
 
 @section('content')
 
-    <div class="min-h-screen bg-slate-50 py-8">
-        <div class="mx-auto max-w-3xl px-6">
+    <div class="mx-auto max-w-4xl space-y-6">
 
             {{-- HEADER --}}
-            <div class="mb-6">
+            <div class="soft-card p-6">
+                <span class="mini-tag">Data Akun</span>
                 <a
                     href="{{ route('accounts.index') }}"
-                    class="text-sm font-medium text-blue-600 hover:text-blue-700"
+                    class="mt-4 inline-flex text-sm font-medium text-emerald-700 hover:text-emerald-800"
                 >
                     ← Kembali ke Data Akun
                 </a>
 
-                <h1 class="mt-4 text-2xl font-bold text-slate-800">
+                <h1 class="mt-3 text-3xl font-bold text-slate-800">
                     Tambah Data Akun
                 </h1>
 
@@ -42,7 +42,7 @@
             <form
                 method="POST"
                 action="{{ route('accounts.store') }}"
-                class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"
+                class="soft-card p-6"
             >
                 @csrf
 
@@ -63,7 +63,7 @@
                             name="nama_akun"
                             value="{{ old('nama_akun') }}"
                             required
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                             placeholder="Contoh: SIMPEL PPMA"
                         >
                     </div>
@@ -83,7 +83,7 @@
                             id="email"
                             name="email"
                             value="{{ old('email') }}"
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                             placeholder="nama@email.com"
                         >
                     </div>
@@ -103,7 +103,7 @@
                             id="username"
                             name="username"
                             value="{{ old('username') }}"
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                             placeholder="Username akun"
                         >
                     </div>
@@ -123,7 +123,7 @@
                             id="password"
                             name="password"
                             value="{{ old('password') }}"
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                             placeholder="Password akun"
                         >
 
@@ -146,7 +146,7 @@
                             id="keterangan"
                             name="keterangan"
                             rows="4"
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
                             placeholder="Keterangan tambahan..."
                         >{{ old('keterangan') }}</textarea>
                     </div>
@@ -159,14 +159,14 @@
 
                     <a
                         href="{{ route('accounts.index') }}"
-                        class="rounded-lg px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100"
+                        class="secondary-btn"
                     >
                         Batal
                     </a>
 
                     <button
                         type="submit"
-                        class="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-blue-700"
+                        class="primary-btn"
                     >
                         Simpan
                     </button>
@@ -175,7 +175,6 @@
 
             </form>
 
-        </div>
     </div>
 
 @endsection

@@ -128,6 +128,39 @@ class RegulationController extends Controller
             $query->where('status', $request->status);
         }
 
+        $today = now()->startOfDay();
+
+        switch ($request->input('masa_berlaku')) {
+            case 'expired':
+                $query->whereNotNull('tanggal_berakhir')
+                    ->whereDate('tanggal_berakhir', '<', $today);
+                break;
+            case '30-hari':
+                $query->whereBetween('tanggal_berakhir', [
+                    $today->toDateString(),
+                    $today->copy()->addDays(30)->toDateString(),
+                ]);
+                break;
+            case '31-90-hari':
+                $query->whereDate(
+                    'tanggal_berakhir',
+                    '>',
+                    $today->copy()->addDays(30)->toDateString()
+                )->whereDate(
+                    'tanggal_berakhir',
+                    '<=',
+                    $today->copy()->addDays(90)->toDateString()
+                );
+                break;
+            case 'lebih-90-hari':
+                $query->whereDate(
+                    'tanggal_berakhir',
+                    '>',
+                    $today->copy()->addDays(90)->toDateString()
+                );
+                break;
+        }
+
         // Search
         if ($request->filled('search')) {
 

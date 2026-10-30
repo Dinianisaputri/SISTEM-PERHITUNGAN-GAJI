@@ -11,11 +11,10 @@
             </p>
         </div>
 
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ route('warning-notices.index') }}"
-               class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
-                Kembali
-            </a>
+<a href="{{ request('return_to', route('warning-notices.index')) }}"
+   class="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50">
+    {{ request('return_to') ? 'Kembali ke Data Karyawan' : 'Kembali ke daftar Surat Teguran' }}
+</a>
 
             <a href="{{ route('warning-notices.edit', $warningNotice) }}"
                class="rounded-lg border border-amber-200 bg-white px-4 py-2.5 text-sm font-medium text-amber-700 transition hover:bg-amber-50">

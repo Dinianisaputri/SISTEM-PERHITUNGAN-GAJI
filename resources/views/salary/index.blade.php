@@ -148,7 +148,7 @@
                     type="text"
                     name="search"
                     value="{{ request('search') }}"
-                    placeholder="PIN / nama..."
+                    placeholder="PIN / nama / unit penempatan..."
                     class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
                 >
             </div>
@@ -279,7 +279,9 @@
                         <th class="whitespace-nowrap px-4 py-3 text-right">
                             Total Gaji
                         </th>
-
+ <th class="whitespace-nowrap px-4 py-3 text-right">
+                            BPJS
+                        </th>
                         <th class="whitespace-nowrap px-4 py-3 text-center">
                             Aksi
                         </th>
@@ -424,47 +426,94 @@
 {{-- TOTAL GAJI --}}
 <td class="whitespace-nowrap px-4 py-3 text-right">
     @if($jenisBelumDitentukan)
-
-        <span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700">
-            Belum ditentukan
-        </span>
-
+        <span class="text-xs text-gray-400">Belum ditentukan</span>
     @else
-
         <div class="font-semibold text-gray-800">
             Rp {{ number_format($data['gaji_bersih'], 0, ',', '.') }}
         </div>
 
         @if($data['total_potongan'] > 0)
             <div class="text-xs text-gray-400">
-                Kotor:
-                Rp {{ number_format($data['gaji_kotor'], 0, ',', '.') }}
+                Gaji kotor: Rp {{ number_format($data['gaji_kotor'], 0, ',', '.') }}
             </div>
         @endif
-
     @endif
 </td>
 
-                            {{-- AKSI --}}
-                            <td class="whitespace-nowrap px-4 py-3 text-center">
+{{-- BPJS --}}
+<td class="whitespace-nowrap px-4 py-3 text-center">
+    @php
+        $salaryDetail = $data['salary_detail'] ?? null;
 
-                                <a
-                                    href="{{ route('salary.detail', array_merge(
-                                        ['employee' => $employee->id],
-                                        request()->only([
-                                            'tanggal_mulai',
-                                            'tanggal_selesai',
-                                            'jenis_karyawan',
-                                            'bagian',
-                                            'search',
-                                        ])
-                                    )) }}"
-                                    class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                                >
-                                    Detail
-                                </a>
+        $terdaftarBpjs =
+            (bool) $employee->bpjs_tk_terdaftar ||
+            (bool) $employee->bpjs_kesehatan_terdaftar;
 
-                            </td>
+        $tarifBpjs = (float) ($employee->tarif_bpjs ?? 0);
+
+        $potongBpjsAktif = $salaryDetail
+            ? $salaryDetail->deductions()
+                ->where('nama_potongan', 'Potongan BPJS')
+                ->where('keterangan', 'Potongan otomatis dari Master BPJS')
+                ->exists()
+            : false;
+    @endphp
+
+    @if($terdaftarBpjs)
+        @if($tarifBpjs > 0)
+            <form
+                action="{{ route('salary.bpjs.toggle', $employee->id) }}"
+                method="POST"
+                class="flex flex-col items-center gap-1"
+            >
+                @csrf
+
+                <input type="hidden" name="tanggal_mulai" value="{{ $tanggalMulai }}">
+                <input type="hidden" name="tanggal_selesai" value="{{ $tanggalSelesai }}">
+
+                <label class="inline-flex cursor-pointer items-center gap-2">
+                    <input
+                        type="checkbox"
+                        name="potong_bpjs"
+                        value="1"
+                        {{ $potongBpjsAktif ? 'checked' : '' }}
+                        onchange="this.form.submit()"
+                        class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                    >
+
+                    <span class="text-xs text-gray-600">
+                        {{ $potongBpjsAktif ? 'Aktif' : 'Potong' }}
+                    </span>
+                </label>
+
+                <span class="text-xs text-gray-500">
+                    Rp {{ number_format($tarifBpjs, 0, ',', '.') }}
+                </span>
+            </form>
+        @else
+            <span class="text-xs text-amber-600">Tarif belum diisi</span>
+        @endif
+    @else
+        <span class="text-xs text-gray-300">-</span>
+    @endif
+</td>
+
+{{-- AKSI --}}
+<td class="whitespace-nowrap px-4 py-3 text-center">
+    <a href="{{ route('salary.detail', array_merge(
+        ['employee' => $employee->id],
+        request()->only([
+            'tanggal_mulai',
+            'tanggal_selesai',
+            'jenis_karyawan',
+            'bagian',
+            'search'
+        ])
+    )) }}"
+       class="inline-flex items-center rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-100">
+        Detail
+    </a>
+</td>
 
                         </tr>
 

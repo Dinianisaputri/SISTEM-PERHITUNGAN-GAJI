@@ -115,6 +115,10 @@ class SalaryController extends Controller
                     'fingerprint_pin',
                     'like',
                     "%{$search}%"
+                )->orWhere(
+                    'penempatan',
+                    'like',
+                    "%{$search}%"
                 );
             });
         }
@@ -2157,4 +2161,115 @@ public function archive(
             ->route('salary_archives.index')
             ->with('success', 'Arsip gaji berhasil disimpan.');
     }
+    
+public function toggleBpjs(Request $request, Employee $employee)
+{
+    $data = $request->validate([
+        'tanggal_mulai' => ['required', 'date'],
+        'tanggal_selesai' => [
+            'required',
+            'date',
+            'after_or_equal:tanggal_mulai',
+        ],
+        'potong_bpjs' => ['nullable', 'boolean'],
+    ]);
+
+    $potongBpjs = $request->boolean('potong_bpjs');
+
+    // Tarif gabungan diambil dari Master BPJS.
+    $terdaftarBpjs =
+        $employee->bpjs_tk_terdaftar ||
+        $employee->bpjs_kesehatan_terdaftar;
+
+    $tarifBpjs = (float) ($employee->tarif_bpjs ?? 0);
+
+    if ($potongBpjs && (!$terdaftarBpjs || $tarifBpjs <= 0)) {
+        return redirect()
+            ->route('salary.index', $this->filterParams($request))
+            ->with(
+                'error',
+                'Karyawan belum terdaftar BPJS atau tarif BPJS belum diisi.'
+            );
+    }
+
+    $period = SalaryPeriod::firstOrCreate(
+        [
+            'tanggal_mulai' => $data['tanggal_mulai'],
+            'tanggal_selesai' => $data['tanggal_selesai'],
+        ],
+        ['status' => 'draft']
+    );
+
+    $jenisKaryawan = strtolower(
+        trim((string) ($employee->jenis_karyawan ?? ''))
+    );
+
+    // Buat detail hanya jika belum tersedia.
+    // Detail yang sudah ada tidak diubah tarifnya.
+    $detail = SalaryDetail::firstOrNew([
+        'salary_period_id' => $period->id,
+        'employee_id' => $employee->id,
+    ]);
+
+    if (!$detail->exists) {
+        $detail->jenis_karyawan = $employee->jenis_karyawan;
+        $detail->tarif_harian = $jenisKaryawan === 'harian'
+            ? 127855
+            : 0;
+        $detail->tarif_jam = $jenisKaryawan === 'borongan'
+            ? 18000
+            : 0;
+        $detail->tarif_lembur_biasa = 18500;
+        $detail->tarif_lembur_libur = 37000;
+        $detail->tarif_uang_makan = 11000;
+        $detail->jam_istirahat = 1;
+        $detail->save();
+    }
+
+    // Penanda khusus agar potongan manual tidak ikut terhapus.
+    $namaPotongan = 'Potongan BPJS';
+    $penandaOtomatis = 'Potongan otomatis dari Master BPJS';
+
+    $potonganOtomatis = $detail->deductions()
+        ->where('nama_potongan', $namaPotongan)
+        ->where('keterangan', $penandaOtomatis)
+        ->orderBy('id')
+        ->get();
+
+    if ($potongBpjs) {
+        $potongan = $potonganOtomatis->first();
+
+        if ($potongan) {
+            $potongan->update(['nominal' => $tarifBpjs]);
+
+            // Bersihkan duplikat otomatis jika sebelumnya ada.
+            $potonganOtomatis->skip(1)->each(
+                fn ($item) => $item->delete()
+            );
+        } else {
+            $detail->deductions()->create([
+                'nama_potongan' => $namaPotongan,
+                'nominal' => $tarifBpjs,
+                'keterangan' => $penandaOtomatis,
+            ]);
+        }
+    } else {
+        // Hanya hapus potongan otomatis BPJS periode ini.
+        $potonganOtomatis->each(
+            fn ($item) => $item->delete()
+        );
+    }
+
+    $this->syncTotalPotongan($detail);
+
+    return redirect()
+        ->route('salary.index', $this->filterParams($request))
+        ->with(
+            'success',
+            $potongBpjs
+                ? 'Potongan BPJS berhasil diterapkan.'
+                : 'Potongan BPJS berhasil dilepas.'
+        );
+}
+
 }

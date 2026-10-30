@@ -34,6 +34,11 @@ class SalarySettingController extends Controller
             'amount' => 11000,
             'unit' => '3 jam',
         ],
+        'bpjs_ketenagakerjaan' => [
+            'label' => 'Potongan BPJS Ketenagakerjaan',
+            'amount' => 0,
+            'unit' => 'karyawan/periode'
+        ]
     ];
 
     public function index()

@@ -24,9 +24,8 @@ use App\Http\Controllers\MasterPenempatanController;
 use App\Http\Controllers\MasterKategoriRegulationController;
 use App\Http\Controllers\MasterDataController;
 use App\Http\Controllers\WarningNoticeController;
-use App\Http\Controllers\ContractController;
-
-
+use App\Http\Controllers\ContractController;      
+use App\Http\Controllers\MasterBpjsController;
 /*
 |--------------------------------------------------------------------------
 | Landing Page Publik
@@ -318,3 +317,23 @@ Route::get(
 
 Route::resource('warning-notices', WarningNoticeController::class);
 Route::resource('contracts', ContractController::class);
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::view('/panduan', 'panduan.index')
+        ->name('panduan.index');
+
+// Master BPJS
+Route::get('/master-bpjs', [MasterBpjsController::class, 'index'])
+    ->name('master-bpjs.index');
+
+Route::put('/master-bpjs/{employee}/tarif', [
+    MasterBpjsController::class,
+    'updateTarif'
+])->name('master-bpjs.update-tarif');
+
+Route::post(
+    '/gaji/{employee}/potong-bpjs',
+    [SalaryController :: class, 'toggleBpjs'
+    ])->name ('salary.bpjs.toggle');
+});

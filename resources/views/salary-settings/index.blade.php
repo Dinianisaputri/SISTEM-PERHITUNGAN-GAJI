@@ -116,7 +116,42 @@
                 @endforeach
             </div>
         </div>
+<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    <h2 class="text-base font-semibold text-slate-800">
+        BPJS Ketenagakerjaan
+    </h2>
 
+    <p class="mt-1 text-sm text-slate-500">
+        Atur satu nominal potongan BPJS yang digunakan saat HRD
+        mencentang BPJS pada detail gaji karyawan.
+    </p>
+
+    <div class="mt-5 max-w-md">
+        <label for="bpjs_ketenagakerjaan"
+               class="mb-2 block text-sm font-medium text-slate-700">
+            Nominal Potongan BPJS per Karyawan per Periode
+        </label>
+
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-slate-500">Rp</span>
+
+            <input
+                id="bpjs_ketenagakerjaan"
+                type="number"
+                name="bpjs_ketenagakerjaan"
+                min="0"
+                max="999999999"
+                step="1"
+                required
+                value="{{ old(
+                    'bpjs_ketenagakerjaan',
+                    $settings['bpjs_ketenagakerjaan']->amount
+                ) }}"
+                class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            >
+        </div>
+    </div>
+</div>
         <div class="flex flex-wrap justify-end gap-3">
             <a href="{{ route('salary.index') }}"
                class="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">

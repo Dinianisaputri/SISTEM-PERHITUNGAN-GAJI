@@ -44,6 +44,14 @@ class Employee extends Model
         'rt',
         'rw',
         'detail_alamat',
+        'npwp',
+        'bpjs_tk_terdaftar',
+        'no_bpjs_tk',
+        'program_bpjs_tk',
+        'bpjs_kesehatan_terdaftar',
+        'no_bpjs_kesehatan',
+        'kelas_bpjs_kesehatan',
+        'tarif_bpjs',
     ];
 
     protected $casts = [
@@ -54,11 +62,17 @@ class Employee extends Model
         'kontrak_ke' => 'integer',
         'jumlah_sp' => 'integer',
         'is_active' => 'boolean',
+        'bpjs_tk_terdaftar' => 'boolean',
+        'bpjs_kesehatan_terdaftar' => 'boolean',
     ];
 
     public function warningLetters(): HasMany
     {
         return $this->hasMany(WarningLetter::class);
+    }
+        public function warningNotices(): HasMany
+    {
+        return $this->hasMany(WarningNotice::class);
     }
 
     public function contracts(): HasMany

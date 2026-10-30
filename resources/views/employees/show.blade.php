@@ -260,6 +260,91 @@
     </div>
 
 
+
+{{-- NPWP DAN BPJS --}}
+<div class="soft-card p-6">
+    <h2 class="text-lg font-semibold text-slate-800 mb-5">
+        Data Pajak dan BPJS
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        {{-- NPWP --}}
+        <div>
+            <p class="text-xs text-slate-500">NPWP</p>
+            <p class="mt-1 font-medium text-slate-800">
+                {{ $employee->npwp ?: '-' }}
+            </p>
+        </div>
+
+        {{-- STATUS BPJS TK --}}
+        <div>
+            <p class="text-xs text-slate-500">Status BPJS Ketenagakerjaan</p>
+            <p class="mt-1">
+                @if ($employee->bpjs_tk_terdaftar)
+                    <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                        Terdaftar
+                    </span>
+                @else
+                    <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                        Tidak Terdaftar
+                    </span>
+                @endif
+            </p>
+        </div>
+
+        {{-- PROGRAM BPJS TK --}}
+        <div>
+            <p class="text-xs text-slate-500">Program BPJS Ketenagakerjaan</p>
+            <p class="mt-1 font-medium text-slate-800">
+                {{ $employee->bpjs_tk_terdaftar ? ($employee->program_bpjs_tk ?: '-') : 'Tidak Terdaftar' }}
+            </p>
+        </div>
+
+        {{-- NOMOR BPJS TK --}}
+        <div>
+            <p class="text-xs text-slate-500">Nomor BPJS Ketenagakerjaan</p>
+            <p class="mt-1 font-medium text-slate-800">
+                {{ $employee->bpjs_tk_terdaftar ? ($employee->no_bpjs_tk ?: '-') : 'Tidak Terdaftar' }}
+            </p>
+        </div>
+
+        {{-- STATUS BPJS KESEHATAN --}}
+        <div>
+            <p class="text-xs text-slate-500">Status BPJS Kesehatan</p>
+            <p class="mt-1">
+                @if ($employee->bpjs_kesehatan_terdaftar)
+                    <span class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+                        Terdaftar
+                    </span>
+                @else
+                    <span class="inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                        Tidak Terdaftar
+                    </span>
+                @endif
+            </p>
+        </div>
+
+        {{-- KELAS BPJS KESEHATAN --}}
+        <div>
+            <p class="text-xs text-slate-500">Kelas BPJS Kesehatan</p>
+            <p class="mt-1 font-medium text-slate-800">
+                {{ $employee->bpjs_kesehatan_terdaftar ? ($employee->kelas_bpjs_kesehatan ?: '-') : 'Tidak Terdaftar' }}
+            </p>
+        </div>
+
+        {{-- NOMOR BPJS KESEHATAN --}}
+        <div>
+            <p class="text-xs text-slate-500">Nomor BPJS Kesehatan</p>
+            <p class="mt-1 font-medium text-slate-800">
+                {{ $employee->bpjs_kesehatan_terdaftar ? ($employee->no_bpjs_kesehatan ?: '-') : 'Tidak Terdaftar' }}
+            </p>
+        </div>
+
+    </div>
+</div>
+
+
     {{-- DATA PEKERJAAN --}}
     <div class="soft-card p-6">
 
@@ -352,8 +437,245 @@
 
     </div>
 
+    
+{{-- RIWAYAT KONTRAK --}}
+<div class="soft-card p-6">
+    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-lg font-semibold text-slate-800">Riwayat Kontrak</h2>
+            <p class="mt-1 text-sm text-slate-500">Riwayat kontrak kerja karyawan.</p>
+        </div>
 
-    {{-- DOKUMEN --}}
+        <a href="{{ route('contracts.create') }}"
+           class="primary-btn">
+            + Tambah Kontrak
+        </a>
+    </div>
+
+    @if ($employee->contracts->isNotEmpty())
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full min-w-[850px] text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Kontrak Ke-</th>
+                        <th class="px-4 py-3">Nomor Kontrak</th>
+                        <th class="px-4 py-3">Jenis Kontrak</th>
+                        <th class="px-4 py-3">Mulai</th>
+                        <th class="px-4 py-3">Berakhir</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Dokumen & Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach ($employee->contracts as $contract)
+                        <tr class="transition hover:bg-slate-50">
+                            <td class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700">
+                                {{ $contract->kontrak_ke ? 'Kontrak ke-' . $contract->kontrak_ke : '-' }}
+                            </td>
+                            <td class="px-4 py-3 text-slate-700">{{ $contract->nomor_kontrak ?: '-' }}</td>
+                            <td class="px-4 py-3 text-slate-700">{{ $contract->jenis_kontrak ?: '-' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $contract->tanggal_mulai?->format('d-m-Y') ?? '-' }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600">{{ $contract->tanggal_berakhir?->format('d-m-Y') ?? '-' }}</td>
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ strtolower($contract->status ?? '') === 'aktif' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
+                                    {{ ucfirst($contract->status ?? '-') }}
+                                </span>
+                            </td>
+                            <td class="whitespace-nowrap px-4 py-3">
+                                @if ($contract->file_surat)
+                                    <a href="{{ asset('storage/' . $contract->file_surat) }}" target="_blank" rel="noopener noreferrer" class="font-medium text-blue-700 hover:underline">Lihat Surat</a>
+                                @else
+                                    <span class="text-slate-400">Belum diunggah</span>
+                                @endif
+                                <a href="{{ route('contracts.print', $contract) }}" target="_blank" rel="noopener noreferrer" class="ml-2 font-medium text-emerald-700 hover:underline">Cetak PDF</a>
+                                <a href="{{ route('contracts.show', $contract) }}" class="ml-2 font-medium text-blue-700 hover:underline">Detail</a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="rounded-xl border border-dashed border-slate-300 px-6 py-8 text-center">
+            <p class="font-medium text-slate-600">Belum ada riwayat kontrak.</p>
+            <p class="mt-1 text-sm text-slate-500">Tambahkan kontrak melalui tombol di atas.</p>
+        </div>
+    @endif
+</div>
+
+{{-- RIWAYAT SURAT TEGURAN --}}
+<div class="soft-card p-6">
+    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-lg font-semibold text-slate-800">
+                Riwayat Surat Teguran
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+                Riwayat Surat Teguran karyawan.
+            </p>
+        </div>
+
+        <a href="{{ route('warning-notices.create', ['employee_id' => $employee->id]) }}"
+           class="primary-btn">
+            + Tambah Surat Teguran
+        </a>
+    </div>
+
+    @if ($employee->warningNotices->isNotEmpty())
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full min-w-[760px] text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Nomor Surat</th>
+                        <th class="px-4 py-3">Tanggal Surat</th>
+                        <th class="px-4 py-3">Mulai Berlaku</th>
+                        <th class="px-4 py-3">Akhir Berlaku</th>
+                        <th class="px-4 py-3">Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    @foreach ($employee->warningNotices as $notice)
+                        <tr class="transition hover:bg-slate-50">
+                            <td class="px-4 py-3 font-medium text-slate-800">
+                                {{ $notice->nomor_surat ?: '-' }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                {{ $notice->tanggal_surat?->format('d-m-Y') ?? '-' }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                {{ $notice->tanggal_mulai_berlaku?->format('d-m-Y') ?? '-' }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                {{ $notice->tanggal_akhir_berlaku?->format('d-m-Y') ?? '-' }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                <a href="{{ route('warning-notices.show', $notice) . '?return_to=' . urlencode(route('employees.show', $employee)) }}"
+                                   class="font-medium text-blue-700 hover:underline">
+                                    Detail
+                                </a>
+
+                                <a href="{{ route('warning-notices.print', $notice) }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="ml-3 font-medium text-emerald-700 hover:underline">
+                                    Unduh PDF
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="rounded-xl border border-dashed border-slate-300 px-6 py-8 text-center">
+            <p class="font-medium text-slate-600">
+                Belum ada riwayat Surat Teguran.
+            </p>
+            <p class="mt-1 text-sm text-slate-500">
+                Tambahkan Surat Teguran melalui tombol di atas.
+            </p>
+        </div>
+    @endif
+</div>
+
+
+{{-- RIWAYAT SURAT PERINGATAN --}}
+<div class="soft-card p-6">
+    <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h2 class="text-lg font-semibold text-slate-800">
+                Riwayat Surat Peringatan
+            </h2>
+            <p class="mt-1 text-sm text-slate-500">
+                Riwayat Surat Peringatan (SP) karyawan.
+            </p>
+        </div>
+
+        <a href="{{ route('warning-letters.create', ['employee_id' => $employee->id]) }}"
+           class="primary-btn">
+            + Tambah Surat Peringatan
+        </a>
+    </div>
+
+    @if ($employee->warningLetters->isNotEmpty())
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+            <table class="w-full min-w-[760px] text-left text-sm">
+                <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th class="px-4 py-3">Nomor Surat</th>
+                        <th class="px-4 py-3">Tingkat SP</th>
+                        <th class="px-4 py-3">Tanggal Surat</th>
+                        <th class="px-4 py-3">Status</th>
+                        <th class="px-4 py-3">Aksi</th>
+                    </tr>
+                </thead>
+
+                <tbody class="divide-y divide-slate-100">
+                    @foreach ($employee->warningLetters as $letter)
+                        @php
+                            $tingkatSp = (int) $letter->tingkat_sp;
+                            $labelSp = [
+                                1 => 'SP I',
+                                2 => 'SP II',
+                                3 => 'SP III',
+                            ][$tingkatSp] ?? ($tingkatSp ? 'SP ' . $tingkatSp : '-');
+                        @endphp
+
+                        <tr class="transition hover:bg-slate-50">
+                            <td class="px-4 py-3 font-medium text-slate-800">
+                                {{ $letter->nomor_surat ?: '-' }}
+                            </td>
+
+                            <td class="px-4 py-3 text-slate-700">
+                                {{ $labelSp }}
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3 text-slate-600">
+                                {{ $letter->tanggal_surat?->format('d-m-Y') ?? '-' }}
+                            </td>
+
+                            <td class="px-4 py-3">
+                                <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {{ strtolower($letter->status ?? '') === 'aktif' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
+                                    {{ ucfirst($letter->status ?? '-') }}
+                                </span>
+                            </td>
+
+                            <td class="whitespace-nowrap px-4 py-3">
+                                <a href="{{ route('warning-letters.show', $letter) . '?return_to=' . urlencode(route('employees.show', $employee)) }}"
+                                   class="font-medium text-blue-700 hover:underline">
+                                    Detail
+                                </a>
+
+                                <a href="{{ route('warning-letters.print', $letter) }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer"
+                                   class="ml-3 font-medium text-emerald-700 hover:underline">
+                                    Unduh PDF
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <div class="rounded-xl border border-dashed border-slate-300 px-6 py-8 text-center">
+            <p class="font-medium text-slate-600">
+                Belum ada riwayat Surat Peringatan.
+            </p>
+            <p class="mt-1 text-sm text-slate-500">
+                Tambahkan Surat Peringatan melalui tombol di atas.
+            </p>
+        </div>
+    @endif
+</div>
+
+{{-- DOKUMEN --}}
     <div class="soft-card p-6">
 
         <h2 class="text-lg font-semibold text-slate-800 mb-2">

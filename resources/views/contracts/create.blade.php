@@ -193,6 +193,28 @@
                           class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">{{ old('keterangan') }}</textarea>
             </div>
         </div>
+        
+{{-- Dokumen Surat Kontrak --}}
+<div class="mb-5">
+    <label for="file_surat" class="block text-sm font-medium text-gray-700 mb-2">
+        Dokumen Surat Kontrak
+    </label>
+
+    <input
+        type="file"
+        name="file_surat"
+        id="file_surat"
+        accept=".pdf,.jpg,.jpeg,.png"
+        class="block w-full rounded-lg border border-gray-300 p-2 text-sm"
+    >
+
+    <p class="mt-1 text-xs text-gray-500">
+        Format PDF, JPG, JPEG, atau PNG. Maksimal 5 MB.
+        Boleh dikosongkan jika surat asli belum tersedia.
+    </p>
+    
+</div>
+
 
         <div class="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4 sm:flex-row sm:justify-end">
             <a href="{{ route('contracts.index') }}"

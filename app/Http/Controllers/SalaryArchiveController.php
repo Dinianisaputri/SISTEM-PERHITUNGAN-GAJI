@@ -416,7 +416,6 @@ public function updateSalaryDetail(
     $totalPotonganTambahan = collect($items)->sum('nominal');
 
     DB::transaction(function () use (
-        $salaryArchive,
         $detail,
         $items,
         $totalPotonganTambahan
@@ -436,10 +435,6 @@ public function updateSalaryDetail(
                 ->implode("\n"),
             'gaji_bersih' => $gajiBersih,
         ]);
-
-        $details = $query
-    ->orderBy('employee_name')
-    ->get();
     });
 
     return redirect()
@@ -450,83 +445,94 @@ public function updateSalaryDetail(
         ->with('success', 'Rincian potongan arsip berhasil disimpan.');
 }
 
-
 public function slipPdf(SalaryArchive $salaryArchive)
 {
     abort_unless($salaryArchive->archive_type === 'salary', 404);
 
-    $details = $salaryArchive->details()
-        ->orderBy('employee_name')
-        ->get();
+    
+$details = $salaryArchive->details()
+    ->with('employee')
+    ->orderBy('employee_name')
+    ->get();
 
-    abort_if(
-        $details->isEmpty(),
-        404,
-        'Data slip gaji tidak ditemukan.'
-    );
+abort_if(
+    $details->isEmpty(),
+    404,
+    'Data slip gaji tidak ditemukan.'
+);
 
-    // Cari detail arsip yang belum memiliki snapshot potongan awal.
-    $detailIdsWithoutSnapshot = $details
-        ->filter(function ($detail) {
-            return empty($detail->rincian_potongan)
-                && (float) $detail->total_potongan > 0;
-        })
-        ->pluck('employee_id')
-        ->filter()
-        ->unique()
-        ->values();
+// Ambil detail gaji aktif untuk periode arsip.
+$employeeIds = $details
+    ->filter(fn ($detail) => $detail->employee_id)
+    ->pluck('employee_id')
+    ->unique()
+    ->values();
 
-    if ($detailIdsWithoutSnapshot->isNotEmpty()) {
-        $salaryDetails = SalaryDetail::query()
-            ->with('deductions')
-            ->whereIn('employee_id', $detailIdsWithoutSnapshot)
-            ->whereHas('period', function ($query) use ($salaryArchive) {
-                $query->whereDate(
-                    'tanggal_mulai',
-                    $salaryArchive->start_date
-                )->whereDate(
-                    'tanggal_selesai',
-                    $salaryArchive->end_date
-                );
+$salaryDetails = SalaryDetail::query()
+    ->with('deductions')
+    ->whereIn('employee_id', $employeeIds)
+    ->whereHas('period', function ($query) use ($salaryArchive) {
+        $query->whereDate(
+            'tanggal_mulai',
+            $salaryArchive->start_date
+        )->whereDate(
+            'tanggal_selesai',
+            $salaryArchive->end_date
+        );
+    })
+    ->latest('id')
+    ->get()
+    ->unique('employee_id')
+    ->keyBy('employee_id');
+
+// Lengkapi rincian yang ditampilkan tanpa mengubah arsip di database.
+foreach ($details as $detail) {
+    $rincianArsip = $detail->rincian_potongan ?? [];
+
+    if (is_string($rincianArsip)) {
+        $rincianArsip = json_decode($rincianArsip, true) ?? [];
+    }
+
+    if (!is_array($rincianArsip)) {
+        $rincianArsip = [];
+    }
+
+    $salaryDetail = $salaryDetails->get($detail->employee_id);
+
+    if ($salaryDetail) {
+        $rincianAktif = $salaryDetail->deductions
+            ->map(function ($potongan) {
+                return [
+                    'nama_potongan' => $potongan->nama_potongan,
+                    'nominal' => (float) $potongan->nominal,
+                    'keterangan' => $potongan->keterangan,
+                ];
             })
-            ->latest('id')
-            ->get()
-            ->unique('employee_id')
-            ->keyBy('employee_id');
+            ->values()
+            ->all();
 
-        foreach ($details as $detail) {
-            if (
-                !empty($detail->rincian_potongan) ||
-                (float) $detail->total_potongan <= 0
-            ) {
-                continue;
-            }
+        foreach ($rincianAktif as $potonganAktif) {
+            $nama = $potonganAktif['nama_potongan'] ?? '';
 
-            $salaryDetail = $salaryDetails->get(
-                $detail->employee_id
+            $sudahAda = collect($rincianArsip)->contains(
+                function ($potonganArsip) use ($nama, $potonganAktif) {
+                    return ($potonganArsip['nama_potongan'] ?? '') === $nama
+                        && ($potonganArsip['keterangan'] ?? '') ===
+                            ($potonganAktif['keterangan'] ?? '');
+                }
             );
 
-            if (!$salaryDetail) {
-                continue;
+            if (!$sudahAda) {
+                $rincianArsip[] = $potonganAktif;
             }
-
-            $detail->setAttribute(
-                'rincian_potongan',
-                $salaryDetail->deductions
-                    ->map(function ($potongan) {
-                        return [
-                            'nama_potongan' => $potongan->nama_potongan,
-                            'nominal' => (float) $potongan->nominal,
-                            'keterangan' => $potongan->keterangan,
-                        ];
-                    })
-                    ->values()
-                    ->all()
-            );
         }
     }
 
-    $pdf = Pdf::loadView('salary_archives.slip_pdf', [
+    $detail->setAttribute('rincian_potongan', $rincianArsip);
+}
+
+$pdf = Pdf::loadView('salary_archives.slip_pdf', [
+
         'salaryArchive' => $salaryArchive,
         'details' => $details,
     ])->setPaper('a4', 'portrait');

@@ -28,8 +28,9 @@
         </div>
     @endif
 
-    <form action="{{ route('contracts.update', $contract) }}" method="POST"
-          class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+   <form action="{{ route('contracts.update', $contract) }}" method="POST"
+      enctype="multipart/form-data"
+      class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         @csrf
         @method('PUT')
 
@@ -70,7 +71,26 @@
                        value="{{ old('nomor_kontrak', $contract->nomor_kontrak) }}" required
                        class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
             </div>
+        <div>
+            <label for="kontrak_ke" class="mb-2 block text-sm font-medium text-slate-700">
+                Kontrak Ke-
+            </label>
 
+            <input
+                type="number"
+                id="kontrak_ke"
+                name="kontrak_ke"
+                min="1"
+                step="1"
+                value="{{ old('kontrak_ke', $contract->kontrak_ke) }}"
+                placeholder="Contoh: 1, 2, 3, atau 4"
+                class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"
+            >
+
+            <p class="mt-1 text-xs text-slate-500">
+                Isi nomor urutan kontrak sesuai data HRD. Boleh dikosongkan jika belum diketahui.
+            </p>
+        </div>
             <div>
                 <label for="jenis_kontrak" class="mb-2 block text-sm font-medium text-slate-700">
                     Jenis Kontrak <span class="text-red-500">*</span>
@@ -153,6 +173,45 @@
                class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-100">
                 Batal
             </a>
+            
+{{-- Dokumen Surat Kontrak --}}
+<div class="mb-5">
+    <label for="file_surat" class="block text-sm font-medium text-gray-700 mb-2">
+        Dokumen Surat Kontrak
+    </label>
+
+    @if ($contract->file_surat)
+        <p class="mb-2 text-sm">
+            Dokumen saat ini:
+            <a
+                href="{{ asset('storage/' . $contract->file_surat) }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-blue-600 hover:underline"
+            >
+                Lihat surat kontrak
+            </a>
+        </p>
+    @else
+        <p class="mb-2 text-sm text-gray-500">
+            Belum ada dokumen yang diunggah.
+        </p>
+    @endif
+
+    <input
+        type="file"
+        name="file_surat"
+        id="file_surat"
+        accept=".pdf,.jpg,.jpeg,.png"
+        class="block w-full rounded-lg border border-gray-300 p-2 text-sm"
+    >
+
+    <p class="mt-1 text-xs text-gray-500">
+        Kosongkan jika tidak ingin mengganti dokumen.
+        Format PDF, JPG, JPEG, atau PNG. Maksimal 5 MB.
+    </p>
+</div>
+
             <button type="submit"
                     class="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700">
                 Simpan Perubahan

@@ -44,6 +44,7 @@ class SalaryCalculationService
     | - Jika jam kerja bersih >= 10 jam, mendapat uang makan 1 kali
 
     | - Borongan tidak menggunakan lembur biasa/libur
+    - untuk karyawan yang mempunyai data tarif BPJS maka dikurangi tarif
 
     |
 
@@ -789,7 +790,6 @@ class SalaryCalculationService
         ];
 
     }
-
     /*
 
     |--------------------------------------------------------------------------

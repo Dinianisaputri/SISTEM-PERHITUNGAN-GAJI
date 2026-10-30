@@ -16,10 +16,16 @@
                 </p>
             </div>
 
+            <div class="flex flex-col gap-2 sm:flex-row">
+            <a href="{{ route('regulations.dashboard') }}"
+               class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50">
+                ← Dashboard Regulasi
+            </a>
             <a href="{{ route('regulations.create') }}"
                class="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition">
                 + Tambah Regulasi
             </a>
+            </div>
         </div>
 
 
@@ -47,7 +53,7 @@
 
             <form method="GET" action="{{ route('regulations.index') }}">
 
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
 
                     {{-- Pencarian --}}
                     <div class="md:col-span-2">
@@ -117,6 +123,32 @@
                                 {{ request('status') == 'Tidak Terpenuhi' ? 'selected' : '' }}
                             >
                                 Tidak Terpenuhi
+                            </option>
+                        </select>
+                    </div>
+
+                    {{-- Masa berlaku --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                            Masa Berlaku
+                        </label>
+
+                        <select
+                            name="masa_berlaku"
+                            class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                        >
+                            <option value="">Semua Masa Berlaku</option>
+                            <option value="expired" @selected(request('masa_berlaku') === 'expired')>
+                                Sudah expired
+                            </option>
+                            <option value="30-hari" @selected(request('masa_berlaku') === '30-hari')>
+                                Berakhir ≤ 30 hari
+                            </option>
+                            <option value="31-90-hari" @selected(request('masa_berlaku') === '31-90-hari')>
+                                Berakhir 31–90 hari
+                            </option>
+                            <option value="lebih-90-hari" @selected(request('masa_berlaku') === 'lebih-90-hari')>
+                                Lebih dari 90 hari
                             </option>
                         </select>
                     </div>

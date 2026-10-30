@@ -3,6 +3,22 @@
 use App\Models\Employee;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+
+function seedEmployeeMasterOptions(): void
+{
+    foreach ([
+        'master_bagians' => 'Fish Meal',
+        'master_jabatans' => 'Operator',
+    ] as $table => $name) {
+        DB::table($table)->insert([
+            'nama' => $name,
+            'is_active' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+}
 
 it('renders the employee create page', function () {
     $user = User::factory()->create();
@@ -34,6 +50,7 @@ it('renders the employee edit page with the modern HR form', function () {
 
 it('creates an employee with the full profile fields including passport photo', function () {
     $user = User::factory()->create();
+    seedEmployeeMasterOptions();
 
     $response = $this->actingAs($user)->post('/employees', [
         'name' => 'BAY ANDI LUKMAN',
@@ -68,6 +85,7 @@ it('creates an employee with the full profile fields including passport photo', 
 
 it('accepts harian as a valid employee type and shows it in the filter options', function () {
     $user = User::factory()->create();
+    seedEmployeeMasterOptions();
 
     $createResponse = $this->actingAs($user)->get('/employees/create');
     $createResponse->assertSee('Harian');

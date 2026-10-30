@@ -188,5 +188,28 @@ public function destroy(WarningLetter $warningLetter)
     return redirect()
         ->route('warning-letters.index')
         ->with('success', 'Surat Peringatan berhasil dihapus.');
+
+    $request->validate([
+        'nama' => ['nullable', 'string', 'max:255'],
+        'tingkat_sp' => ['nullable', 'in:1,2,3'],
+    ]);
+
+    $warningLetters = WarningLetter::with('employee')
+        ->when($request->filled('nama'), function ($query) use ($request) {
+            $nama = trim($request->input('nama'));
+
+            $query->whereHas('employee', function ($employeeQuery) use ($nama) {
+                $employeeQuery->where('name', 'like', '%' . $nama . '%');
+            });
+        })
+        ->when($request->filled('tingkat_sp'), function ($query) use ($request) {
+            $query->where('tingkat_sp', $request->input('tingkat_sp'));
+        })
+        ->orderByDesc('tanggal_surat')
+        ->orderByDesc('id')
+        ->paginate(10)
+        ->withQueryString();
+
+    return view('warning-letters.index', compact('warningLetters'));
 }
 }

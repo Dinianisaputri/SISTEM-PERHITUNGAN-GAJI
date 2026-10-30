@@ -4,12 +4,16 @@
 
 @section('content')
 
-<div class="min-h-screen bg-slate-50 -mx-4 -my-6 sm:-mx-6 lg:-mx-8">
-    <div class="max-w-4xl mx-auto px-6 py-8">
+<div class="mx-auto max-w-4xl space-y-6">
 
         {{-- Header --}}
-        <div class="mb-6">
-            <h1 class="text-2xl font-bold text-slate-800">
+        <div class="soft-card p-6">
+            <span class="mini-tag">Data Akun</span>
+            <a href="{{ route('accounts.index') }}"
+               class="mt-4 inline-flex text-sm font-medium text-emerald-700 hover:text-emerald-800">
+                ← Kembali ke Data Akun
+            </a>
+            <h1 class="mt-3 text-3xl font-bold text-slate-800">
                 Edit Data Akun
             </h1>
 
@@ -19,14 +23,14 @@
         </div>
 
         {{-- Form Card --}}
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm">
+        <div class="soft-card overflow-hidden">
 
             <form action="{{ route('accounts.update', $account) }}" method="POST">
 
                 @csrf
                 @method('PUT')
 
-                <div class="p-6 space-y-6">
+                <div class="space-y-6 p-6">
 
                     {{-- Nama Akun --}}
                     <div>
@@ -40,7 +44,7 @@
                             name="nama_akun"
                             id="nama_akun"
                             value="{{ old('nama_akun', $account->nama_akun) }}"
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500"
                             required
                         >
 
@@ -63,7 +67,7 @@
                             name="email"
                             id="email"
                             value="{{ old('email', $account->email) }}"
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500"
                         >
 
                         @error('email')
@@ -85,7 +89,7 @@
                             name="username"
                             id="username"
                             value="{{ old('username', $account->username) }}"
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500"
                         >
 
                         @error('username')
@@ -109,7 +113,7 @@
                                 name="password"
                                 id="password"
                                 value="{{ old('password', $account->password) }}"
-                                class="w-full rounded-lg border border-slate-300 px-4 py-2.5 pr-12 text-sm focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full rounded-lg border border-slate-300 px-4 py-2.5 pr-12 text-sm focus:border-emerald-500 focus:ring-emerald-500"
                             >
 
                             <button
@@ -177,7 +181,7 @@
                     {{-- Keterangan --}}
                     <div>
                         <label for="keterangan"
-                               class="block text-sm font-semibold text-slate-700 mb-2">
+                               class="mb-2 block text-sm font-semibold text-slate-700">
                             Keterangan
                         </label>
 
@@ -185,7 +189,7 @@
                             name="keterangan"
                             id="keterangan"
                             rows="4"
-                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:ring-blue-500"
+                            class="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm focus:border-emerald-500 focus:ring-emerald-500"
                         >{{ old('keterangan', $account->keterangan) }}</textarea>
 
                         @error('keterangan')
@@ -198,16 +202,16 @@
                 </div>
 
                 {{-- Footer --}}
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-3">
+                <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
 
                     <a href="{{ route('accounts.index') }}"
-                       class="px-4 py-2.5 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-100 transition">
+                       class="secondary-btn">
                         Batal
                     </a>
 
                     <button
                         type="submit"
-                        class="px-5 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
+                        class="primary-btn">
                         Simpan Perubahan
                     </button>
 
@@ -217,7 +221,6 @@
 
         </div>
 
-    </div>
 </div>
 
 @endsection

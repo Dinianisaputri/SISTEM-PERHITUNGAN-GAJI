@@ -50,7 +50,7 @@
 
             page-break-inside: avoid;
 
-            height: 94mm;
+            height: auto;
 
         }
 
@@ -58,7 +58,7 @@
 
             width: 50%;
 
-            height: 94mm;
+            height: auto;
 
             padding: 0.8mm;
 
@@ -66,21 +66,13 @@
 
         }
 
-        .slip {
-
-            border: 1px solid #253746;
-
-            padding: 4px;
-
-            height: 90mm;
-
-            min-height: 90mm;
-
-            page-break-inside: avoid;
-
-            overflow: hidden;
-
-        }
+.slip {
+    border: 1px solid #253746;
+    padding: 4px;
+    height: auto;
+    page-break-inside: avoid;
+    overflow: visible;
+}
 
         .empty-slip {
 
@@ -406,7 +398,7 @@
 
 @endphp
 
-@foreach ($details->chunk(6) as $pageDetails)
+@foreach ($details->chunk(2) as $pageDetails)
 
     <table class="sheet"
 
@@ -424,29 +416,38 @@
 
                 @foreach ($row as $detail)
 
-                    @php
+@php
+    $rincianPotongan = $detail->rincian_potongan ?? [];
 
-                        $rincianPotongan = $detail->rincian_potongan ?? [];
+    if (is_string($rincianPotongan)) {
+        $rincianPotongan = json_decode($rincianPotongan, true) ?? [];
+    }
 
-                        if (is_string($rincianPotongan)) {
+    if (!is_array($rincianPotongan)) {
+        $rincianPotongan = [];
+    }
 
-                            $rincianPotongan = json_decode(
+    $adaPotonganBpjs = collect($rincianPotongan)->contains(
+        fn ($potongan) => str_contains(
+            strtolower((string) ($potongan['nama_potongan'] ?? '')),
+            'bpjs'
+        ) || str_contains(
+            strtolower((string) ($potongan['keterangan'] ?? '')),
+            'bpjs'
+        )
+    );
 
-                                $rincianPotongan,
+    if (!$adaPotonganBpjs && (float) ($detail->total_potongan ?? 0) > 0) {
+        $employee = $detail->employee;
+        $tarifBpjs = (float) ($employee?->tarif_bpjs ?? 0);
+        $terdaftarBpjs = (bool) ($employee?->bpjs_tk_terdaftar ?? false)
+            || (bool) ($employee?->bpjs_kesehatan_terdaftar ?? false);
 
-                                true
-
-                            ) ?? [];
-
-                        }
-
-                        if (!is_array($rincianPotongan)) {
-
-                            $rincianPotongan = [];
-
-                        }
-
-                    @endphp
+        $adaPotonganBpjs = $terdaftarBpjs
+            && $tarifBpjs > 0
+            && round((float) $detail->total_potongan, 2) === round($tarifBpjs, 2);
+    }
+@endphp
 
                     <td class="slip-cell">
 
@@ -581,33 +582,22 @@
                                 </tr>
 
                                 <tr class="subtotal">
+    <td>Gaji kotor</td>
+    <td>{{ $rupiah($detail->gaji_kotor) }}</td>
+</tr>
 
-                                    <td>Gaji kotor</td>
 
-                                    <td>{{ $rupiah($detail->gaji_kotor) }}</td>
-
-                                </tr>
-
-                                <tr>
-
-                                    <td>Total potongan</td>
-
-                                    <td>-{{ $rupiah($detail->total_potongan) }}</td>
-
-                                </tr>
+<tr>
+    <td>
+        Total potongan
+        @if ($adaPotonganBpjs)
+            <small style="color: #596773;">(BPJS)</small>
+        @endif
+    </td>
+    <td>-{{ $rupiah($detail->total_potongan) }}</td>
+</tr>
 
                                 @if ((float) $detail->potongan_tambahan > 0)
-
-                                <tr>
-
-                                    <td colspan="2">
-
-                                        <strong>Rincian Potongan Tambahan</strong>
-
-                                    </td>
-
-                                </tr>
-
                                     @php
 
         $rincianTambahan = $detail->rincian_potongan_tambahan ?? [];
@@ -630,21 +620,9 @@
 
         <tr>
 
-            <td>
+            <td>{{ $potongan['nama_potongan'] ?? 'Potongan' }}</td>
 
-                {{ $potongan['nama_potongan'] ?? 'Potongan tambahan' }}
-
-                @if (!empty($potongan['keterangan']))
-
-                    <br>
-
-                    <small>{{ $potongan['keterangan'] }}</small>
-
-                @endif
-
-            </td>
-
-            <td>{{ $rupiah($potongan['nominal'] ?? 0) }}</td>
+            <td>-{{ $rupiah($potongan['nominal'] ?? 0) }}</td>
 
         </tr>
 
@@ -661,106 +639,6 @@
                                 </tr>
 
                             </table>
-
-                            @if (count($rincianPotongan) > 0)
-
-                                <div class="deduction-box">
-
-                                    <div class="deduction-heading">
-
-                                        RINCIAN POTONGAN
-
-                                    </div>
-
-                                    <table class="deduction-table">
-
-                                        <thead>
-
-                                            <tr>
-
-                                                <th>Nama potongan</th>
-
-                                                <th>Keterangan</th>
-
-                                                <th>Nominal</th>
-
-                                            </tr>
-
-                                        </thead>
-
-                                        <tbody>
-
-                                            @foreach ($rincianPotongan as $potongan)
-
-                                                <tr>
-
-                                                    <td>
-
-                                                        {{ $potongan['nama_potongan'] ?? 'Potongan' }}
-
-                                                    </td>
-
-                                                    <td>
-
-                                                        {{ $potongan['keterangan'] ?? '-' }}
-
-                                                    </td>
-
-                                                    <td>
-
-                                                        -{{ $rupiah($potongan['nominal'] ?? 0) }}
-
-                                                    </td>
-
-                                                </tr>
-
-                                            @endforeach
-
-                                        </tbody>
-
-                                    </table>
-
-                                </div>
-
-                            @elseif ((float) ($detail->total_potongan ?? 0) > 0)
-
-                                <div class="deduction-box">
-
-                                    <div class="deduction-heading">
-
-                                        RINCIAN POTONGAN
-
-                                    </div>
-
-                                    <div class="deduction-empty">
-
-                                        Rincian potongan tidak tersedia pada arsip ini.
-
-                                    </div>
-
-                                </div>
-
-                            @endif
-
-{{-- Alasan potongan tambahan --}}
-
-@if (!empty($detail->alasan_potongan_tambahan))
-
-    <div class="reason">
-
-        <strong>Alasan potongan:</strong>
-
-        {{ $detail->alasan_potongan_tambahan }}
-
-    </div>
-
-@endif
-
-<div class="footer">
-
-                                Slip gaji berdasarkan arsip penggajian.
-
-                            </div>
 
                         </div>
 

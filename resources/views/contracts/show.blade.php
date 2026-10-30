@@ -142,10 +142,10 @@
                 </button>
             </form>
 
-            <a href="{{ route('contracts.index') }}"
-               class="rounded-xl border border-slate-300 bg-white px-5 py-3 text-center text-sm font-medium text-slate-700 hover:bg-slate-100">
-                Kembali
-            </a>
+        <a href="{{ route('employees.show', $contract->employee_id) }}"
+   class="text-sm font-medium text-emerald-700 hover:text-emerald-800">
+    ← Kembali ke Detail Karyawan
+</a>
         </div>
     </div>
 </div>

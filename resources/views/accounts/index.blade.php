@@ -4,14 +4,16 @@
 
 @section('content')
 
-<div class="min-h-screen bg-slate-50 -mx-4 -my-6 sm:-mx-6 lg:-mx-8">
-    <div class="max-w-7xl mx-auto px-6 py-8">
+<div class="space-y-6">
 
-        {{-- Header --}}
-        <div class="flex items-center justify-between mb-6">
+    {{-- Header --}}
+    <div class="soft-card p-6">
+        <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800">
-                    Data Akun
+                <span class="mini-tag">Data Akun</span>
+
+                <h1 class="mt-3 text-3xl font-bold text-slate-800">
+                    Kelola Data Akun
                 </h1>
 
                 <p class="mt-1 text-sm text-slate-500">
@@ -19,37 +21,41 @@
                 </p>
             </div>
 
-            <a href="{{ route('accounts.create') }}"
-               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
-                <span class="text-lg leading-none">+</span>
-                Tambah Akun
+            <a href="{{ route('accounts.create') }}" class="primary-btn">
+                + Tambah Akun
             </a>
         </div>
+    </div>
 
-        {{-- Success --}}
-        @if(session('success'))
-            <div class="mb-5 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
-                {{ session('success') }}
-            </div>
-        @endif
+    {{-- Success --}}
+    @if(session('success'))
+        <div class="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+            {{ session('success') }}
+        </div>
+    @endif
 
-        {{-- Card --}}
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    {{-- Card --}}
+    <div class="soft-card overflow-hidden">
 
-            {{-- Card Header --}}
-            <div class="px-6 py-4 border-b border-slate-200">
+        {{-- Card Header --}}
+        <div class="border-b border-slate-200 px-5 py-4">
+            <div>
                 <h2 class="text-base font-semibold text-slate-800">
                     Daftar Akun
                 </h2>
+                <p class="mt-1 text-xs text-slate-500">
+                    Data akun yang tersimpan dalam sistem.
+                </p>
             </div>
+        </div>
 
-            @if($accounts->count() > 0)
+        @if($accounts->count() > 0)
 
-                {{-- Table --}}
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
+            {{-- Table --}}
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[1000px] text-left text-sm">
 
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                    <thead class="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                             <tr>
                                 <th class="px-6 py-3 text-left font-semibold text-slate-600">
                                     No
@@ -81,11 +87,11 @@
                             </tr>
                         </thead>
 
-                        <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-slate-100 text-slate-700">
 
                             @foreach($accounts as $account)
 
-                                <tr class="hover:bg-slate-50 transition">
+                                <tr class="transition hover:bg-slate-50">
 
                                     <td class="px-6 py-4 text-slate-600">
                                         {{ $loop->iteration }}
@@ -174,7 +180,7 @@
                                         <div class="flex items-center justify-center gap-2">
 
                                             <a href="{{ route('accounts.edit', $account) }}"
-                                               class="px-3 py-1.5 rounded-md bg-blue-50 text-blue-600 text-xs font-semibold hover:bg-blue-100">
+                                               class="rounded-md bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
                                                 Edit
                                             </a>
 
@@ -186,7 +192,7 @@
                                                 @method('DELETE')
 
                                                 <button type="submit"
-                                                        class="px-3 py-1.5 rounded-md bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100">
+                                                        class="rounded-md bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100">
                                                     Hapus
                                                 </button>
 
@@ -204,10 +210,10 @@
                     </table>
                 </div>
 
-            @else
+        @else
 
-                {{-- Empty State --}}
-                <div class="px-6 py-16 text-center">
+            {{-- Empty State --}}
+            <div class="px-6 py-16 text-center">
 
                     <div class="mx-auto mb-4 w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center">
 
@@ -234,7 +240,7 @@
                     </p>
 
                     <a href="{{ route('accounts.create') }}"
-                       class="inline-flex items-center gap-2 mt-5 px-4 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
+                       class="primary-btn mt-5">
 
                         <span class="text-lg leading-none">+</span>
                         Tambah Akun
@@ -243,9 +249,7 @@
 
                 </div>
 
-            @endif
-
-        </div>
+        @endif
 
     </div>
 </div>

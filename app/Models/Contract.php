@@ -10,12 +10,14 @@ class Contract extends Model
     protected $fillable = [
         'employee_id',
         'nomor_kontrak',
+        'kontrak_ke',
         'jenis_kontrak',
         'bagian',
         'tanggal_mulai',
         'tanggal_berakhir',
         'status',
         'keterangan',
+        'file_surat',
     ];
 
     protected function casts(): array

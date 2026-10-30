@@ -8,7 +8,24 @@
         color-scheme: light;
         --app-accent: #16805d;
         --app-accent-soft: #eaf5ef;
-        --app-border: #e5eae7;
+        --app-border: #dce9e3;
+        --app-page: #f3f8f5;
+        --app-surface: #ffffff;
+        --app-surface-muted: #f1f7f4;
+        --app-text: #1e293b;
+        --app-text-muted: #64748b;
+    }
+
+    :root.dark {
+        color-scheme: dark;
+        --app-accent: #4adea4;
+        --app-accent-soft: #12392e;
+        --app-border: #33483f;
+        --app-page: #101914;
+        --app-surface: #18231d;
+        --app-surface-muted: #202e27;
+        --app-text: #e2ebe5;
+        --app-text-muted: #a4b4aa;
     }
 
     html {
@@ -16,8 +33,10 @@
     }
 
     body {
-        @apply bg-slate-50 text-slate-800 antialiased;
-        font-family: 'Inter', sans-serif;
+        @apply antialiased;
+        background-color: var(--app-page);
+        color: var(--app-text);
+        font-family: 'Plus Jakarta Sans', sans-serif;
     }
 
     ::selection {
@@ -27,12 +46,15 @@
 
 @layer components {
     .theme-shell {
-        @apply min-h-screen bg-slate-50;
+        @apply min-h-screen;
+        background-color: var(--app-page);
     }
 
     .soft-card {
-        @apply rounded-xl border border-slate-200 bg-white;
-        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        @apply rounded-xl border;
+        background-color: var(--app-surface);
+        border-color: var(--app-border);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03), 0 8px 24px rgba(22, 128, 93, 0.035);
     }
 
     .primary-btn {
@@ -48,3 +70,190 @@
     }
 }
 
+.app-content {
+    background-image:
+        radial-gradient(ellipse at 4% 0%, rgba(16, 185, 129, 0.055), transparent 34rem),
+        radial-gradient(ellipse at 96% 8%, rgba(20, 184, 166, 0.04), transparent 30rem);
+}
+
+.app-content .rounded-xl.border.bg-white,
+.app-content .rounded-2xl.border.bg-white {
+    border-color: var(--app-border);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.025), 0 8px 24px rgba(22, 128, 93, 0.03);
+}
+
+.dark body,
+.dark .app-content,
+.dark main.min-h-screen {
+    background-color: var(--app-page);
+    color: var(--app-text);
+}
+
+.dark nav {
+    border-color: var(--app-border);
+    background-color: rgba(24, 35, 29, 0.96);
+}
+
+.dark [class~="bg-white"] {
+    background-color: var(--app-surface) !important;
+}
+
+.dark [class~="bg-slate-50"] {
+    background-color: var(--app-surface-muted) !important;
+}
+
+.dark [class~="bg-slate-100"] {
+    background-color: #293830 !important;
+}
+
+.dark .app-content [class~="text-slate-900"],
+.dark .app-content [class~="text-slate-800"],
+.dark nav [class~="text-slate-900"],
+.dark nav [class~="text-slate-800"] {
+    color: #e8f0eb !important;
+}
+
+.dark .app-content [class~="text-slate-700"],
+.dark nav [class~="text-slate-700"] {
+    color: #d0ddd4 !important;
+}
+
+.dark .app-content [class~="text-slate-600"],
+.dark nav [class~="text-slate-600"] {
+    color: #b7c6bc !important;
+}
+
+.dark .app-content [class~="text-slate-500"],
+.dark nav [class~="text-slate-500"] {
+    color: #9aada1 !important;
+}
+
+.dark .app-content [class~="text-slate-400"],
+.dark nav [class~="text-slate-400"] {
+    color: #83988b !important;
+}
+
+.dark .app-content [class~="border-slate-100"],
+.dark nav [class~="border-slate-100"] {
+    border-color: #2b3b32 !important;
+}
+
+.dark .app-content [class~="border-slate-200"],
+.dark .app-content [class~="border-slate-300"],
+.dark nav [class~="border-slate-200"],
+.dark nav [class~="border-slate-300"] {
+    border-color: var(--app-border) !important;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark select,
+.dark textarea {
+    border-color: var(--app-border);
+    background-color: #141e18;
+    color: var(--app-text);
+    color-scheme: dark;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+    color: #83988b;
+}
+
+.dark .app-content table thead th {
+    background-color: var(--app-surface-muted);
+    color: #a9c1b2;
+}
+
+.dark .app-content table tbody td {
+    border-color: #2b3b32;
+}
+
+.dark .app-content .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+    border-color: #2b3b32;
+}
+
+.dark .app-content [class~="bg-emerald-50"],
+.dark nav [class~="bg-emerald-50"] {
+    background-color: #153b2f !important;
+}
+
+.dark .app-content [class~="text-emerald-800"],
+.dark .app-content [class~="text-emerald-700"],
+.dark nav [class~="text-emerald-800"] {
+    color: #79e0ad !important;
+}
+
+.dark .app-content [class~="hover:bg-slate-50"]:hover,
+.dark nav [class~="hover:bg-slate-50"]:hover {
+    background-color: #26372e !important;
+}
+
+.dark .app-content .border-dashed {
+    border-color: #40564a;
+}
+
+.dark .app-content .bg-emerald-50 p,
+.dark .app-content .bg-amber-50 p,
+.dark .app-content .bg-rose-50 p {
+    color: inherit;
+}
+
+/* FIX DROPDOWN NAVBAR */
+nav details.nav-dropdown {
+    position: relative;
+}
+
+nav details.nav-dropdown:not([open]) > .nav-dropdown-panel {
+    display: none !important;
+}
+
+nav details.nav-dropdown[open] > .nav-dropdown-panel {
+    display: block !important;
+    position: absolute;
+    top: calc(100% + 8px);
+    z-index: 100;
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+    background-color: #fff;
+}
+
+/* Pastikan dropdown tidak saling menutupi secara acak */
+nav details.nav-dropdown[open] {
+    z-index: 100;
+}
+
+nav .nav-dropdown-panel a {
+    display: block;
+    overflow-wrap: break-word;
+}
+
+nav details > summary {
+    cursor: pointer;
+    list-style: none;
+}
+
+nav details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.app-content table {
+    width: 100%;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+}
+
+.app-content table thead th {
+    padding: 1rem;
+    background-color: #f1f7f4;
+    color: #526b61;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+.app-content table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+}
