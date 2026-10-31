@@ -83,6 +83,51 @@ it('creates an employee with the full profile fields including passport photo', 
     expect($employee->surat_kontrak)->not->toBeNull();
 });
 
+it('automatically registers BPJS when its type and number are provided', function () {
+    $user = User::factory()->create();
+    seedEmployeeMasterOptions();
+
+    $response = $this->actingAs($user)->post('/employees', [
+        'name' => 'Karyawan BPJS',
+        'bagian' => 'Fish Meal',
+        'no_induk_karyawan' => '1172',
+        'jabatan' => 'Operator',
+        'jenis_karyawan' => 'Borongan',
+        'is_active' => true,
+        'jumlah_sp' => 0,
+        'kelas_bpjs_kesehatan' => 'Kelas 1',
+        'no_bpjs_kesehatan' => '1234567890',
+        'bpjs_kesehatan_terdaftar' => '0',
+    ]);
+
+    $response->assertRedirect(route('employees.index'));
+    $this->assertDatabaseHas('employees', [
+        'name' => 'Karyawan BPJS',
+        'kelas_bpjs_kesehatan' => 'Kelas 1',
+        'no_bpjs_kesehatan' => '1234567890',
+        'bpjs_kesehatan_terdaftar' => 1,
+    ]);
+});
+
+it('includes legacy BPJS data in master even when its stored registration flag is false', function () {
+    $user = User::factory()->create();
+    $employee = Employee::create([
+        'name' => 'Karyawan BPJS Lama',
+        'bagian' => 'Fish Meal',
+        'jabatan' => 'Operator',
+        'jenis_karyawan' => 'Borongan',
+        'bpjs_kesehatan_terdaftar' => false,
+        'kelas_bpjs_kesehatan' => 'Kelas 2',
+        'no_bpjs_kesehatan' => '9876543210',
+    ]);
+
+    expect($employee->bpjs_kesehatan_terdaftar)->toBeTrue();
+
+    $response = $this->actingAs($user)->get(route('master-bpjs.index'));
+    $response->assertOk();
+    $response->assertSee('Karyawan BPJS Lama');
+});
+
 it('accepts harian as a valid employee type and shows it in the filter options', function () {
     $user = User::factory()->create();
     seedEmployeeMasterOptions();

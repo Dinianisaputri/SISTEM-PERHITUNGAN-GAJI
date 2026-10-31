@@ -117,14 +117,6 @@
 
         <div class="mb-4 flex flex-wrap items-end justify-between gap-2">
 
-            <div>
-
-                <h2 class="text-lg font-bold text-slate-800">Ikhtisar sistem</h2>
-
-                <p class="mt-1 text-sm text-slate-500">Angka utama untuk membantu pemantauan operasional.</p>
-
-            </div>
-
             <span class="text-xs font-medium text-slate-400">RINGKASAN DATA</span>
 
         </div>

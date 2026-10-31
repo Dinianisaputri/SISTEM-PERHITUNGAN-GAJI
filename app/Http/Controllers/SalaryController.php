@@ -2184,12 +2184,15 @@ public function toggleBpjs(Request $request, Employee $employee)
     $tarifBpjs = (float) ($employee->tarif_bpjs ?? 0);
 
     if ($potongBpjs && (!$terdaftarBpjs || $tarifBpjs <= 0)) {
+        $message = 'Karyawan belum terdaftar BPJS atau tarif BPJS belum diisi.';
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $message], 422);
+        }
+
         return redirect()
             ->route('salary.index', $this->filterParams($request))
-            ->with(
-                'error',
-                'Karyawan belum terdaftar BPJS atau tarif BPJS belum diisi.'
-            );
+            ->with('error', $message);
     }
 
     $period = SalaryPeriod::firstOrCreate(
@@ -2261,6 +2264,18 @@ public function toggleBpjs(Request $request, Employee $employee)
     }
 
     $this->syncTotalPotongan($detail);
+
+    if ($request->expectsJson()) {
+        $totalPotongan = (float) $detail->deductions()->sum('nominal');
+
+        return response()->json([
+            'active' => $potongBpjs,
+            'total_deductions' => $totalPotongan,
+            'message' => $potongBpjs
+                ? 'Potongan BPJS berhasil diterapkan.'
+                : 'Potongan BPJS berhasil dilepas.',
+        ]);
+    }
 
     return redirect()
         ->route('salary.index', $this->filterParams($request))

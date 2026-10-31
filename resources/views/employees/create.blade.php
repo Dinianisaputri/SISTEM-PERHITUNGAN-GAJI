@@ -339,12 +339,10 @@
         {{-- BPJS KETENAGAKERJAAN --}}
         <div class="md:col-span-2">
             <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-                <input type="hidden" name="bpjs_tk_terdaftar" value="0">
-                <input type="checkbox" id="bpjs_tk_terdaftar"
-                    name="bpjs_tk_terdaftar" value="1"
-                    {{ old('bpjs_tk_terdaftar') ? 'checked' : '' }}
-                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                Terdaftar BPJS Ketenagakerjaan
+                <input type="checkbox" id="bpjs_tk_terdaftar" disabled
+                    {{ filled(old('program_bpjs_tk')) && filled(old('no_bpjs_tk')) ? 'checked' : '' }}
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-70">
+                Terdaftar BPJS Ketenagakerjaan (otomatis)
             </label>
 
             <div id="bpjs-tk-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
@@ -389,12 +387,10 @@
         {{-- BPJS KESEHATAN --}}
         <div class="md:col-span-2 border-t border-slate-200 pt-4">
             <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-                <input type="hidden" name="bpjs_kesehatan_terdaftar" value="0">
-                <input type="checkbox" id="bpjs_kesehatan_terdaftar"
-                    name="bpjs_kesehatan_terdaftar" value="1"
-                    {{ old('bpjs_kesehatan_terdaftar') ? 'checked' : '' }}
-                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
-                Terdaftar BPJS Kesehatan
+                <input type="checkbox" id="bpjs_kesehatan_terdaftar" disabled
+                    {{ filled(old('kelas_bpjs_kesehatan')) && filled(old('no_bpjs_kesehatan')) ? 'checked' : '' }}
+                    class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:opacity-70">
+                Terdaftar BPJS Kesehatan (otomatis)
             </label>
 
             <div id="bpjs-kesehatan-fields"
@@ -438,7 +434,7 @@
             </div>
 
             <p class="text-xs text-slate-500 mt-4">
-                Nomor BPJS tidak wajib diisi jika karyawan belum terdaftar pada program tersebut.
+                Status terdaftar akan tercentang otomatis setelah jenis/kelas dan nomor BPJS diisi.
             </p>
         </div>
     </div>
@@ -741,22 +737,20 @@
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Tampilkan detail BPJS hanya jika status terdaftar dicentang.
-    const toggleBpjsFields = (checkboxId, fieldsId) => {
+    const syncBpjsCheckbox = (checkboxId, typeId, numberId) => {
         const checkbox = document.getElementById(checkboxId);
-        const fields = document.getElementById(fieldsId);
-        if (!checkbox || !fields) return;
+        const type = document.getElementById(typeId);
+        const number = document.getElementById(numberId);
+        if (!checkbox || !type || !number) return;
         const update = () => {
-            fields.classList.toggle('hidden', !checkbox.checked);
-            fields.querySelectorAll('input').forEach(input => {
-                if (input.type !== 'hidden') input.disabled = !checkbox.checked;
-            });
+            checkbox.checked = type.value.trim() !== '' && number.value.trim() !== '';
         };
-        checkbox.addEventListener('change', update);
+        type.addEventListener('change', update);
+        number.addEventListener('input', update);
         update();
     };
-    toggleBpjsFields('bpjs_tk_terdaftar', 'bpjs-tk-fields');
-    toggleBpjsFields('bpjs_kesehatan_terdaftar', 'bpjs-kesehatan-fields');
+    syncBpjsCheckbox('bpjs_tk_terdaftar', 'program_bpjs_tk', 'no_bpjs_tk');
+    syncBpjsCheckbox('bpjs_kesehatan_terdaftar', 'kelas_bpjs_kesehatan', 'no_bpjs_kesehatan');
     const provinsi = document.getElementById('provinsi_id');
     const kabupaten = document.getElementById('kabupaten_id');
     const kecamatan = document.getElementById('kecamatan_id');

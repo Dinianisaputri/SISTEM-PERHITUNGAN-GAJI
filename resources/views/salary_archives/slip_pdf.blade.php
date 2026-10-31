@@ -398,7 +398,7 @@
 
 @endphp
 
-@foreach ($details->chunk(2) as $pageDetails)
+@foreach ($details->chunk(6) as $pageDetails)
 
     <table class="sheet"
 

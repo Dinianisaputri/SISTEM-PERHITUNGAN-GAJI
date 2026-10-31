@@ -418,7 +418,7 @@
     @if($jenisBelumDitentukan)
         <span class="text-gray-400">-</span>
     @else
-        Rp {{ number_format($data['total_potongan'], 0, ',', '.') }}
+        <span data-salary-deductions>Rp {{ number_format($data['total_potongan'], 0, ',', '.') }}</span>
     @endif
 </td>
 
@@ -428,15 +428,14 @@
     @if($jenisBelumDitentukan)
         <span class="text-xs text-gray-400">Belum ditentukan</span>
     @else
-        <div class="font-semibold text-gray-800">
+        <div data-salary-net class="font-semibold text-gray-800">
             Rp {{ number_format($data['gaji_bersih'], 0, ',', '.') }}
         </div>
 
-        @if($data['total_potongan'] > 0)
-            <div class="text-xs text-gray-400">
-                Gaji kotor: Rp {{ number_format($data['gaji_kotor'], 0, ',', '.') }}
-            </div>
-        @endif
+        <div data-salary-gross-label data-salary-gross="{{ $data['gaji_kotor'] }}"
+             class="text-xs text-gray-400 {{ $data['total_potongan'] > 0 ? '' : 'hidden' }}">
+            Gaji kotor: Rp {{ number_format($data['gaji_kotor'], 0, ',', '.') }}
+        </div>
     @endif
 </td>
 
@@ -464,7 +463,7 @@
             <form
                 action="{{ route('salary.bpjs.toggle', $employee->id) }}"
                 method="POST"
-                class="flex flex-col items-center gap-1"
+                class="js-bpjs-toggle flex flex-col items-center gap-1"
             >
                 @csrf
 
@@ -477,11 +476,10 @@
                         name="potong_bpjs"
                         value="1"
                         {{ $potongBpjsAktif ? 'checked' : '' }}
-                        onchange="this.form.submit()"
                         class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
                     >
 
-                    <span class="text-xs text-gray-600">
+                    <span data-bpjs-status class="text-xs text-gray-600">
                         {{ $potongBpjsAktif ? 'Aktif' : 'Potong' }}
                     </span>
                 </label>
@@ -567,5 +565,67 @@
     </div>
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.js-bpjs-toggle').forEach(form => {
+        const checkbox = form.querySelector('[name="potong_bpjs"]');
+        const status = form.querySelector('[data-bpjs-status]');
+        if (!checkbox || !status) return;
+
+        checkbox.addEventListener('change', () => form.requestSubmit());
+        form.addEventListener('submit', async event => {
+            event.preventDefault();
+            const previousValue = checkbox.checked;
+            const formData = new FormData(form);
+            checkbox.disabled = true;
+
+            try {
+                const response = await fetch(form.action, {
+                    method: form.method,
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Potongan BPJS gagal diperbarui.');
+                }
+                if (typeof result.active !== 'boolean' || typeof result.total_deductions !== 'number') {
+                    throw new Error('Total potongan BPJS tidak dapat dikonfirmasi.');
+                }
+
+                checkbox.checked = result.active;
+                status.textContent = result.active ? 'Aktif' : 'Potong';
+
+                const row = form.closest('tr');
+                const deductions = row?.querySelector('[data-salary-deductions]');
+                const netSalary = row?.querySelector('[data-salary-net]');
+                const grossLabel = row?.querySelector('[data-salary-gross-label]');
+                if (deductions && netSalary && grossLabel) {
+                    const gross = Number(grossLabel.dataset.salaryGross);
+                    const totalDeductions = result.total_deductions;
+                    const formatter = new Intl.NumberFormat('id-ID', {
+                        maximumFractionDigits: 0
+                    });
+
+                    deductions.textContent = `Rp ${formatter.format(totalDeductions)}`;
+                    netSalary.textContent = `Rp ${formatter.format(Math.max(gross - totalDeductions, 0))}`;
+                    grossLabel.classList.toggle('hidden', totalDeductions <= 0);
+                }
+            } catch (error) {
+                checkbox.checked = previousValue;
+                window.alert(error instanceof Error
+                    ? error.message
+                    : 'Potongan BPJS gagal diperbarui.');
+            } finally {
+                checkbox.disabled = false;
+            }
+        });
+    });
+});
+</script>
 
 @endsection

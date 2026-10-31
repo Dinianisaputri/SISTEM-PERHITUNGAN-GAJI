@@ -15,21 +15,32 @@ class MasterBpjsController extends Controller
 
         $employees = Employee::query()
             ->where(function ($query) {
-                $query->where('bpjs_tk_terdaftar', true)
-                    ->orWhere('bpjs_kesehatan_terdaftar', true);
+                $query->where(function ($tk) {
+                    $tk->whereNotNull('program_bpjs_tk')
+                        ->whereRaw("TRIM(program_bpjs_tk) <> ''")
+                        ->whereNotNull('no_bpjs_tk')
+                        ->whereRaw("TRIM(no_bpjs_tk) <> ''");
+                })->orWhere(function ($kesehatan) {
+                    $kesehatan->whereNotNull('kelas_bpjs_kesehatan')
+                        ->whereRaw("TRIM(kelas_bpjs_kesehatan) <> ''")
+                        ->whereNotNull('no_bpjs_kesehatan')
+                        ->whereRaw("TRIM(no_bpjs_kesehatan) <> ''");
+                });
             })
             ->when(
                 in_array($programBpjsTk, ['2 Program', 'Full Program'], true),
                 function ($query) use ($programBpjsTk) {
-                    $query->where('bpjs_tk_terdaftar', true)
-                        ->where('program_bpjs_tk', $programBpjsTk);
+                    $query->where('program_bpjs_tk', $programBpjsTk)
+                        ->whereNotNull('no_bpjs_tk')
+                        ->whereRaw("TRIM(no_bpjs_tk) <> ''");
                 }
             )
             ->when(
                 in_array($kelasBpjsKesehatan, ['Kelas 1', 'Kelas 2'], true),
                 function ($query) use ($kelasBpjsKesehatan) {
-                    $query->where('bpjs_kesehatan_terdaftar', true)
-                        ->where('kelas_bpjs_kesehatan', $kelasBpjsKesehatan);
+                    $query->where('kelas_bpjs_kesehatan', $kelasBpjsKesehatan)
+                        ->whereNotNull('no_bpjs_kesehatan')
+                        ->whereRaw("TRIM(no_bpjs_kesehatan) <> ''");
                 }
             )
             ->when($search !== '', function ($query) use ($search) {

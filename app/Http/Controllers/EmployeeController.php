@@ -42,6 +42,16 @@ private function penempatanList()
         ->toArray();
 }
 
+private function syncBpjsRegistrationFlags(array &$validated): void
+{
+    $validated['bpjs_tk_terdaftar'] =
+        filled($validated['program_bpjs_tk'] ?? null) &&
+        filled($validated['no_bpjs_tk'] ?? null);
+    $validated['bpjs_kesehatan_terdaftar'] =
+        filled($validated['kelas_bpjs_kesehatan'] ?? null) &&
+        filled($validated['no_bpjs_kesehatan'] ?? null);
+}
+
     /*
     |--------------------------------------------------------------------------
     | INDEX DATA KARYAWAN
@@ -569,14 +579,12 @@ private function penempatanList()
 ],
 'npwp' => ['nullable', 'string', 'max:30'],
 
-'bpjs_tk_terdaftar' => ['nullable', 'boolean'],
 'no_bpjs_tk' => ['nullable', 'string', 'max:50'],
 'program_bpjs_tk' => [
     'nullable',
     Rule::in(['Full Program', '2 Program']),
 ],
 
-'bpjs_kesehatan_terdaftar' => ['nullable', 'boolean'],
 'no_bpjs_kesehatan' => ['nullable', 'string', 'max:50'],
 'kelas_bpjs_kesehatan' => [
     'nullable',
@@ -588,23 +596,7 @@ private function penempatanList()
         | UPLOAD FILE
         |--------------------------------------------------------------------------
         */
-                // Checkbox yang tidak dikirim browser dianggap tidak terdaftar.
-     $validated['bpjs_tk_terdaftar'] =
-    $request->boolean('bpjs_tk_terdaftar');
-
-$validated['bpjs_kesehatan_terdaftar'] =
-    $request->boolean('bpjs_kesehatan_terdaftar');
-
-if (!$validated['bpjs_tk_terdaftar']) {
-    $validated['no_bpjs_tk'] = null;
-    $validated['program_bpjs_tk'] = null;
-}
-
-if (!$validated['bpjs_kesehatan_terdaftar']) {
-    $validated['no_bpjs_kesehatan'] = null;
-    $validated['kelas_bpjs_kesehatan'] = null;
-}
-
+$this->syncBpjsRegistrationFlags($validated);
 
 foreach (
             [
@@ -791,14 +783,12 @@ public function getRegions(Request $request)
 ],
 'npwp' => ['nullable', 'string', 'max:30'],
 
-'bpjs_tk_terdaftar' => ['nullable', 'boolean'],
 'no_bpjs_tk' => ['nullable', 'string', 'max:50'],
 'program_bpjs_tk' => [
     'nullable',
     Rule::in(['Full Program', '2 Program']),
 ],
 
-'bpjs_kesehatan_terdaftar' => ['nullable', 'boolean'],
 'no_bpjs_kesehatan' => ['nullable', 'string', 'max:50'],
 'kelas_bpjs_kesehatan' => [
     'nullable',
@@ -1144,16 +1134,7 @@ public function getRegions(Request $request)
         */
         // Pastikan penempatan dari form ikut tersimpan.
         $validated['penempatan'] = $request->input('penempatan');
-        // Checkbox yang tidak dicentang tidak dikirim oleh browser, jadi set eksplisit false.
-        $validated['bpjs_tk_terdaftar'] = $request->boolean('bpjs_tk_terdaftar');
-        $validated['bpjs_kesehatan_terdaftar'] = $request->boolean('bpjs_kesehatan_terdaftar');
-        if (!$validated['bpjs_tk_terdaftar']) {
-            $validated['no_bpjs_tk'] = null;
-            $validated['program_bpjs_tk'] = null;
-        }
-        if (!$validated['bpjs_kesehatan_terdaftar']) {
-            $validated['no_bpjs_kesehatan'] = null;
-        }
+        $this->syncBpjsRegistrationFlags($validated);
         $employee->update($validated);
         return redirect()
             ->route('employees.index')

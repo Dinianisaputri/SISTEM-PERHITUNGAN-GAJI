@@ -66,6 +66,18 @@ class Employee extends Model
         'bpjs_kesehatan_terdaftar' => 'boolean',
     ];
 
+    public function getBpjsTkTerdaftarAttribute(): bool
+    {
+        return filled($this->attributes['program_bpjs_tk'] ?? null)
+            && filled($this->attributes['no_bpjs_tk'] ?? null);
+    }
+
+    public function getBpjsKesehatanTerdaftarAttribute(): bool
+    {
+        return filled($this->attributes['kelas_bpjs_kesehatan'] ?? null)
+            && filled($this->attributes['no_bpjs_kesehatan'] ?? null);
+    }
+
     public function warningLetters(): HasMany
     {
         return $this->hasMany(WarningLetter::class);
