@@ -72,7 +72,6 @@
                     <tr class="border-b border-slate-200 bg-slate-50 text-slate-600">
                         <th class="px-3 py-3 font-semibold">No.</th>
                         <th class="px-3 py-3 font-semibold">Nama Bagian</th>
-                        <th class="px-3 py-3 font-semibold">Status</th>
                         <th class="px-3 py-3 font-semibold">Aksi</th>
                     </tr>
                 </thead>
@@ -86,18 +85,6 @@
 
                             <td class="px-3 py-3 font-medium text-slate-800">
                                 {{ $item->nama }}
-                            </td>
-
-                            <td class="px-3 py-3">
-                                @if($item->is_active)
-                                    <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
-                                        Aktif
-                                    </span>
-                                @else
-                                    <span class="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600">
-                                        Nonaktif
-                                    </span>
-                                @endif
                             </td>
 
                             <td class="px-3 py-3">
@@ -122,15 +109,15 @@
                                         </button>
                                     </form>
 
-                                    <form action="{{ route('master-data.bagian.toggle', $item) }}"
+                                    <form action="{{ route('master-data.bagian.destroy', $item) }}"
                                           method="POST"
-                                          onsubmit="return confirm('Ubah status bagian ini?')">
+                                          onsubmit="return confirm('Hapus bagian ini?')">
                                         @csrf
-                                        @method('PATCH')
+                                        @method('DELETE')
 
                                         <button type="submit"
-                                                class="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-200">
-                                            {{ $item->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                                class="rounded-lg bg-rose-100 px-2.5 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-200">
+                                            Hapus
                                         </button>
                                     </form>
                                 </div>
@@ -138,7 +125,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-3 py-10 text-center text-slate-500">
+                            <td colspan="3" class="px-3 py-10 text-center text-slate-500">
                                 Belum ada data bagian.
                             </td>
                         </tr>

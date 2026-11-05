@@ -31,6 +31,7 @@ class SalaryDetail extends Model
         'total_lembur',
         'uang_makan_lembur',
         'total_potongan',
+        'total_tambahan',
         'gaji_kotor',
         'gaji_bersih',
 
@@ -55,6 +56,7 @@ class SalaryDetail extends Model
         'total_lembur' => 'decimal:2',
         'uang_makan_lembur' => 'decimal:2',
         'total_potongan' => 'decimal:2',
+        'total_tambahan' => 'decimal:2',
         'gaji_kotor' => 'decimal:2',
         'gaji_bersih' => 'decimal:2',
     ];
@@ -77,5 +79,10 @@ class SalaryDetail extends Model
     public function deductions()
     {
         return $this->hasMany(SalaryDeduction::class);
+    }
+
+    public function additions()
+    {
+        return $this->hasMany(SalaryAddition::class);
     }
 }

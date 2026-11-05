@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Employee;
+use App\Models\EmployeeSalaryRate;
 use App\Models\SalarySetting;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 
 class SalarySettingController extends Controller
@@ -30,7 +34,7 @@ class SalarySettingController extends Controller
             'unit' => 'jam',
         ],
         'uang_makan_per_3_jam' => [
-            'label' => 'Uang Makan per 3 Jam Lembur',
+            'label' => 'Uang Makan per Hari Lembur',
             'amount' => 11000,
             'unit' => '3 jam',
         ],
@@ -41,7 +45,7 @@ class SalarySettingController extends Controller
         ]
     ];
 
-    public function index()
+    public function index(Request $request)
     {
         $settings = [];
 
@@ -54,7 +58,103 @@ class SalarySettingController extends Controller
             $settings[$key] = $setting;
         }
 
-        return view('salary-settings.index', compact('settings'));
+        $monthlyEmployeeQuery = Employee::query()
+            ->where('is_active', true)
+            ->whereRaw('LOWER(TRIM(jenis_karyawan)) = ?', ['bulanan']);
+
+        $monthlyBagians = (clone $monthlyEmployeeQuery)
+            ->whereNotNull('bagian')
+            ->whereRaw("TRIM(bagian) <> ''")
+            ->pluck('bagian')
+            ->map(fn (string $bagian) => trim($bagian))
+            ->unique()
+            ->sort()
+            ->values();
+
+        $search = trim((string) $request->query('search', ''));
+        $bagian = trim((string) $request->query('bagian', ''));
+
+        $monthlyEmployees = $monthlyEmployeeQuery
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', '%' . $search . '%'))
+            ->when($bagian !== '', fn ($query) => $query->where('bagian', $bagian))
+            ->with(['salaryRates' => fn ($query) => $query
+                ->orderByDesc('effective_from')
+                ->orderByDesc('id')])
+            ->orderBy('name')
+            ->get()
+            ->map(function (Employee $employee) {
+                $employee->setAttribute(
+                    'active_salary_rate',
+                    $employee->salaryRates->first(
+                        fn (EmployeeSalaryRate $rate) => $rate->effective_from->lte(today())
+                    )
+                );
+
+                return $employee;
+            });
+
+        return view('salary-settings.index', compact(
+            'settings',
+            'monthlyEmployees',
+            'monthlyBagians',
+            'search',
+            'bagian'
+        ));
+    }
+
+    public function storeMonthlyRate(Request $request)
+    {
+        $employeeId = $request->input('employee_id');
+        $validated = $request->validate([
+            'employee_id' => ['required', 'integer', 'exists:employees,id'],
+            'amount' => ['required', 'numeric', 'min:0', 'max:999999999'],
+            'effective_from' => [
+                'required',
+                'date',
+                Rule::unique('employee_salary_rates', 'effective_from')
+                    ->where(fn ($query) => $query->where('employee_id', $employeeId)),
+            ],
+        ], [
+            'effective_from.unique' => 'Tarif untuk karyawan ini sudah tercatat pada tanggal tersebut.',
+        ]);
+
+        $employee = Employee::query()->findOrFail($validated['employee_id']);
+
+        if (strtolower(trim((string) $employee->jenis_karyawan)) !== 'bulanan') {
+            return back()
+                ->withInput()
+                ->withErrors(['employee_id' => 'Tarif khusus ini hanya berlaku untuk karyawan bulanan.']);
+        }
+
+        EmployeeSalaryRate::create([
+            'employee_id' => $employee->id,
+            'amount' => $validated['amount'],
+            'effective_from' => $validated['effective_from'],
+            'created_by' => $request->user()->id,
+        ]);
+
+        return redirect()
+            ->route('salary-settings.index', array_filter(
+                $request->only(['search', 'bagian']),
+                fn ($value) => $value !== null && $value !== ''
+            ))
+            ->with('success', 'Tarif karyawan bulanan berhasil ditambahkan ke riwayat.');
+    }
+
+    public function destroyMonthlyRate(Request $request, Employee $employee, EmployeeSalaryRate $rate)
+    {
+        if ($rate->employee_id !== $employee->id) {
+            throw new NotFoundHttpException();
+        }
+
+        $rate->delete();
+
+        return redirect()
+            ->route('salary-settings.index', array_filter(
+                $request->only(['search', 'bagian']),
+                fn ($value) => $value !== null && $value !== ''
+            ))
+            ->with('success', 'Tarif karyawan berhasil dihapus dari riwayat.');
     }
 
     public function update(Request $request)

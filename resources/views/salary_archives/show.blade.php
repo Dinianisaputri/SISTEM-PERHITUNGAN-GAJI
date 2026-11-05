@@ -87,6 +87,7 @@
                         <th class="px-4 py-3">Gaji Pokok</th>
                         <th class="px-4 py-3">Total Lembur</th>
                         <th class="px-4 py-3">Potongan</th>
+                        <th class="px-4 py-3">Nominal Tambahan</th>
                         <th class="px-4 py-3">Gaji Bersih</th>
                         <th class="px-4 py-3">Aksi</th>
                     @else
@@ -143,6 +144,10 @@
                                 Rp {{ number_format((float) ($detail->total_potongan ?? 0), 0, ',', '.') }}
                             </td>
 
+                            <td class="whitespace-nowrap px-4 py-3">
+                                Rp {{ number_format((float) ($detail->total_tambahan ?? 0), 0, ',', '.') }}
+                            </td>
+
                             <td class="whitespace-nowrap px-4 py-3 font-semibold">
                                 Rp {{ number_format((float) ($detail->gaji_bersih ?? 0), 0, ',', '.') }}
                             </td>
@@ -161,7 +166,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="px-4 py-10 text-center text-gray-500">
+                            <td colspan="12" class="px-4 py-10 text-center text-gray-500">
                                 Belum ada detail gaji pada arsip ini.
                             </td>
                         </tr>

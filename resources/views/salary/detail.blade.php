@@ -69,6 +69,10 @@
         $salarySummary['total_potongan'] ?? 0
     );
 
+    $totalTambahan = (float) (
+        $salarySummary['total_tambahan'] ?? 0
+    );
+
     /*
     | Untuk menghindari perbedaan tampilan apabila controller
     | belum mengirim nominal total lembur terbaru, gaji kotor
@@ -80,7 +84,7 @@
         + $uangMakan;
 
     $gajiBersih = max(
-        $gajiKotor - $totalPotongan,
+        $gajiKotor - $totalPotongan + $totalTambahan,
         0
     );
 
@@ -432,6 +436,9 @@ $jamIstirahat = $isBorongan
                                         </th>
 
                                     @else
+                                        <th class="px-4 py-2.5 text-right font-medium">
+                                            Istirahat
+                                        </th>
 
                                         <th class="px-4 py-2.5 text-right font-medium">
                                             Uang Makan
@@ -524,6 +531,40 @@ $jamIstirahat = $isBorongan
 
                                         </td>
 
+                                        @if($isBorongan)
+                                            <td class="px-2 py-2 text-right">
+                                                <form
+                                                    action="{{ route('salary.attendance.break.update', $employee->id) }}"
+                                                    method="POST"
+                                                    class="flex items-center justify-end gap-1"
+                                                >
+                                                    @csrf
+                                                    @method('PUT')
+                                                    @foreach($queryFilters as $key => $value)
+                                                        @if($value !== null && $value !== '')
+                                                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                                        @endif
+                                                    @endforeach
+                                                    <input type="hidden" name="tanggal" value="{{ $tanggal }}">
+                                                    <input
+                                                        type="number"
+                                                        name="jam_istirahat"
+                                                        min="0"
+                                                        max="24"
+                                                        step="0.01"
+                                                        value="{{ number_format((float) ($row['jam_istirahat'] ?? 1), 2, '.', '') }}"
+                                                        aria-label="Jam istirahat {{ $tanggal }}"
+                                                        class="w-16 rounded border-gray-200 px-1.5 py-1 text-right text-xs"
+                                                    >
+                                                    <button
+                                                        type="submit"
+                                                        class="text-indigo-600 hover:underline"
+                                                    >
+                                                        Simpan
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        @endif
 
                                         @if(!$isBorongan)
 
@@ -617,7 +658,7 @@ $jamIstirahat = $isBorongan
                                     <tr>
 
                                         <td
-                                            colspan="{{ $isBorongan ? 5 : 6 }}"
+                                            colspan="7"
                                             class="px-4 py-8 text-center text-gray-400"
                                         >
                                             Belum ada data absensi.
@@ -1009,6 +1050,91 @@ $jamIstirahat = $isBorongan
                         </div>
 
 
+                        {{-- NOMINAL TAMBAHAN --}}
+                        <div class="mt-4 rounded-xl bg-emerald-50 p-3">
+                            <div class="mb-2 flex items-center justify-between">
+                                <span class="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-700">
+                                    Nominal Tambahan
+                                </span>
+                                <button
+                                    type="button"
+                                    onclick="openAddAddition()"
+                                    class="rounded-lg border border-emerald-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-emerald-700 transition hover:border-emerald-300"
+                                >
+                                    + Tambah
+                                </button>
+                            </div>
+
+                            @forelse($additions as $addition)
+                                <div class="flex items-start justify-between gap-3 border-b border-emerald-100 py-2.5 last:border-0">
+                                    <div class="min-w-0">
+                                        <p class="text-sm font-medium text-slate-700">
+                                            {{ $addition->nama_tambahan }}
+                                        </p>
+                                        @if($addition->keterangan)
+                                            <p class="mt-0.5 text-[11px] text-slate-400">
+                                                {{ $addition->keterangan }}
+                                            </p>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="whitespace-nowrap text-sm font-semibold text-emerald-700">
+                                            +Rp {{ number_format($addition->nominal, 0, ',', '.') }}
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onclick='openEditAddition(
+                                                @json($addition->id),
+                                                @json($addition->nama_tambahan),
+                                                @json($addition->nominal),
+                                                @json($addition->keterangan)
+                                            )'
+                                            class="rounded-md p-1 text-slate-400 transition hover:bg-emerald-100 hover:text-slate-700"
+                                            title="Edit"
+                                        >
+                                            Edit
+                                        </button>
+                                        <form
+                                            action="{{ route('salary.addition.destroy', [$employee->id, $addition->id]) }}"
+                                            method="POST"
+                                            onsubmit="return confirm('Hapus nominal tambahan ini?')"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
+                                            @foreach($queryFilters as $key => $value)
+                                                @if($value !== null && $value !== '')
+                                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                                @endif
+                                            @endforeach
+                                            <button
+                                                type="submit"
+                                                class="rounded-md p-1 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                                                title="Hapus"
+                                            >
+                                                ×
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @empty
+                                <p class="py-2 text-xs text-slate-400">
+                                    Belum ada nominal tambahan.
+                                </p>
+                            @endforelse
+
+                            <div class="mt-3 border-t border-emerald-200 pt-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-sm font-medium text-slate-600">
+                                        Total Nominal Tambahan
+                                    </span>
+                                    <span class="text-sm font-semibold text-emerald-700">
+                                        +Rp {{ number_format($totalTambahan, 0, ',', '.') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+
                         {{-- ================================================= --}}
                         {{-- GAJI BERSIH --}}
                         {{-- ================================================= --}}
@@ -1134,7 +1260,7 @@ $jamIstirahat = $isBorongan
                                     <div>
 
                                         <label class="mb-1 block text-xs text-gray-400">
-                                            Tarif Harian
+                                            Tarif per Hari Hadir
                                         </label>
 
                                         <div class="relative">
@@ -1145,30 +1271,22 @@ $jamIstirahat = $isBorongan
 
                                             <input
                                                 type="text"
-                                                name="tarif_harian"
-                                                value="{{ old(
-                                                    'tarif_harian',
-                                                    (($salaryDetail?->tarif_harian ?? 0) > 0
-                                                        ? number_format(
-                                                            (float) $salaryDetail->tarif_harian,
-                                                            0,
-                                                            ',',
-                                                            '.'
-                                                        )
-                                                        : ''
-                                                    )
-                                                ) }}"
-                                                class="rupiah-input w-full rounded-lg border-gray-200 py-2 pl-9 text-sm focus:border-gray-400 focus:ring-0"
-                                                placeholder="0"
-                                                inputmode="numeric"
-                                                autocomplete="off"
+                                                value="{{ number_format($tarifHarian, 0, ',', '.') }}"
+                                                readonly
+                                                class="w-full cursor-not-allowed rounded-lg border-gray-200 bg-gray-50 py-2 pl-9 text-sm text-gray-600"
                                             >
 
                                         </div>
 
                                         <p class="mt-1 text-[11px] text-gray-400">
-                                            Diisi manual. Jika kosong, dihitung Rp0.
+                                            Tarif diambil dari master tarif karyawan dan dikalikan hari hadir.
                                         </p>
+                                        @if ($tarifHarian <= 0)
+                                            <a href="{{ route('salary-settings.index') }}"
+                                               class="mt-1 inline-block text-xs font-medium text-rose-700 underline">
+                                                Atur tarif karyawan ini di Master Tarif Gaji
+                                            </a>
+                                        @endif
 
                                     </div>
 
@@ -1617,6 +1735,96 @@ $jamIstirahat = $isBorongan
 </div>
 
 
+<div id="addAdditionModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/30" onclick="closeAddAddition()"></div>
+    <div class="relative flex min-h-screen items-center justify-center p-4">
+        <div class="w-full max-w-md rounded-xl bg-white shadow-xl">
+            <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                <h2 class="text-sm font-semibold text-gray-800">Tambah Nominal Tambahan</h2>
+                <button type="button" onclick="closeAddAddition()" class="text-gray-400 hover:text-gray-700">×</button>
+            </div>
+            <form action="{{ route('salary.addition.store', $employee->id) }}" method="POST">
+                @csrf
+                @foreach($queryFilters as $key => $value)
+                    @if($value !== null && $value !== '')
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+                <div class="space-y-4 p-5">
+                    <div>
+                        <label class="mb-1 block text-xs text-gray-500">Nama Tambahan</label>
+                        <input type="text" name="nama_tambahan" required placeholder="Contoh: Bonus"
+                               class="w-full rounded-lg border-gray-200 py-2 text-sm focus:border-gray-400 focus:ring-0">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs text-gray-500">Nominal</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">Rp</span>
+                            <input type="text" name="nominal" required class="rupiah-input w-full rounded-lg border-gray-200 py-2 pl-9 text-sm"
+                                   placeholder="0" inputmode="numeric" autocomplete="off">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs text-gray-500">Keterangan</label>
+                        <textarea name="keterangan_tambahan" rows="2" placeholder="Opsional"
+                                  class="w-full rounded-lg border-gray-200 py-2 text-sm focus:border-gray-400 focus:ring-0"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-gray-100 px-5 py-4">
+                    <button type="button" onclick="closeAddAddition()" class="rounded-lg border border-gray-200 px-4 py-2 text-xs font-medium text-gray-600">Batal</button>
+                    <button type="submit" class="rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="editAdditionModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/30" onclick="closeEditAddition()"></div>
+    <div class="relative flex min-h-screen items-center justify-center p-4">
+        <div class="w-full max-w-md rounded-xl bg-white shadow-xl">
+            <div class="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+                <h2 class="text-sm font-semibold text-gray-800">Edit Nominal Tambahan</h2>
+                <button type="button" onclick="closeEditAddition()" class="text-gray-400 hover:text-gray-700">×</button>
+            </div>
+            <form id="editAdditionForm" method="POST">
+                @csrf
+                @method('PUT')
+                @foreach($queryFilters as $key => $value)
+                    @if($value !== null && $value !== '')
+                        <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                    @endif
+                @endforeach
+                <div class="space-y-4 p-5">
+                    <div>
+                        <label class="mb-1 block text-xs text-gray-500">Nama Tambahan</label>
+                        <input id="editNamaTambahan" type="text" name="nama_tambahan" required
+                               class="w-full rounded-lg border-gray-200 py-2 text-sm focus:border-gray-400 focus:ring-0">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs text-gray-500">Nominal</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">Rp</span>
+                            <input id="editNominalTambahan" type="text" name="nominal" required class="rupiah-input w-full rounded-lg border-gray-200 py-2 pl-9 text-sm"
+                                   placeholder="0" inputmode="numeric" autocomplete="off">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs text-gray-500">Keterangan</label>
+                        <textarea id="editKeteranganTambahan" name="keterangan_tambahan" rows="2"
+                                  class="w-full rounded-lg border-gray-200 py-2 text-sm focus:border-gray-400 focus:ring-0"></textarea>
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2 border-t border-gray-100 px-5 py-4">
+                    <button type="button" onclick="closeEditAddition()" class="rounded-lg border border-gray-200 px-4 py-2 text-xs font-medium text-gray-600">Batal</button>
+                    <button type="submit" class="rounded-lg bg-gray-900 px-4 py-2 text-xs font-medium text-white">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
 {{-- =============================================================== --}}
 {{-- JAVASCRIPT --}}
 {{-- =============================================================== --}}
@@ -1831,6 +2039,57 @@ $jamIstirahat = $isBorongan
 
     }
 
+    function openAddAddition() {
+        const modal = document.getElementById('addAdditionModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        const nominal = modal.querySelector('.rupiah-input');
+        if (nominal) {
+            nominal.value = '';
+            nominal.focus();
+        }
+    }
+
+    function closeAddAddition() {
+        const modal = document.getElementById('addAdditionModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
+    function openEditAddition(id, nama, nominal, keterangan) {
+        const modal = document.getElementById('editAdditionModal');
+        const form = document.getElementById('editAdditionForm');
+        if (!modal || !form) {
+            return;
+        }
+
+        document.getElementById('editNamaTambahan').value = nama ?? '';
+        document.getElementById('editNominalTambahan').value = formatRupiah(nominal);
+        document.getElementById('editKeteranganTambahan').value = keterangan ?? '';
+        form.action = "{{ url('/gaji/' . $employee->id . '/detail/tambahan') }}/" + id;
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        document.getElementById('editNamaTambahan').focus();
+    }
+
+    function closeEditAddition() {
+        const modal = document.getElementById('editAdditionModal');
+        if (!modal) {
+            return;
+        }
+
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+
 
     document.addEventListener(
         'keydown',
@@ -1841,6 +2100,10 @@ $jamIstirahat = $isBorongan
                 closeAddDeduction();
 
                 closeEditDeduction();
+
+                closeAddAddition();
+
+                closeEditAddition();
 
             }
 

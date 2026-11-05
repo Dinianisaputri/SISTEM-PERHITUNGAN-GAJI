@@ -1,5 +1,113 @@
 
 document.addEventListener('DOMContentLoaded', () => {
+    const scrollRestoreKey = 'app:restore-scroll-after-action';
+    const pendingScrollRestore = sessionStorage.getItem(scrollRestoreKey);
+
+    if (pendingScrollRestore) {
+        sessionStorage.removeItem(scrollRestoreKey);
+
+        try {
+            const savedPosition = JSON.parse(pendingScrollRestore);
+
+            if (
+                Number.isFinite(savedPosition.x) &&
+                Number.isFinite(savedPosition.y) &&
+                Date.now() - savedPosition.savedAt < 60_000
+            ) {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        const deleteAnchor = savedPosition.deleteAnchor;
+                        const tables = Array.from(document.querySelectorAll('table'));
+                        const table = deleteAnchor?.tableId
+                            ? document.getElementById(deleteAnchor.tableId)
+                            : tables[deleteAnchor?.tableIndex];
+                        const rowGroup = Number.isInteger(deleteAnchor?.bodyIndex) &&
+                            deleteAnchor.bodyIndex >= 0
+                            ? table?.tBodies[deleteAnchor.bodyIndex]
+                            : table;
+                        const rows = rowGroup ? Array.from(rowGroup.rows) : [];
+                        const row = deleteAnchor && rows.length
+                            ? rows[Math.min(deleteAnchor.rowIndex, rows.length - 1)]
+                            : null;
+
+                        if (row && Number.isFinite(deleteAnchor.viewportTop)) {
+                            const targetY =
+                                window.scrollY +
+                                row.getBoundingClientRect().top -
+                                deleteAnchor.viewportTop;
+                            window.scrollTo(savedPosition.x, Math.max(0, targetY));
+                            return;
+                        }
+
+                        window.scrollTo(savedPosition.x, savedPosition.y);
+                    });
+                });
+            }
+        } catch (error) {
+            console.error('Gagal memulihkan posisi halaman setelah aksi.', error);
+        }
+    }
+
+    document.addEventListener('submit', (event) => {
+        const form = event.target;
+
+        if (!(form instanceof HTMLFormElement) || form.method.toLowerCase() === 'dialog') {
+            return;
+        }
+
+        const submitterTarget = event.submitter?.formTarget;
+        const formTarget = submitterTarget || form.target;
+
+        if (formTarget && formTarget.toLowerCase() !== '_self') {
+            return;
+        }
+
+        queueMicrotask(() => {
+            if (event.defaultPrevented) return;
+
+            const isDelete = form.method.toUpperCase() === 'DELETE' ||
+                Array.from(form.elements).some((element) =>
+                    element instanceof HTMLInputElement &&
+                    element.name === '_method' &&
+                    element.value.toUpperCase() === 'DELETE'
+                );
+            const row = isDelete ? form.closest('tr') : null;
+            const table = row?.closest('table');
+            const rowGroup = row?.parentElement instanceof HTMLTableSectionElement
+                ? row.parentElement
+                : table;
+            const tableIndex = table
+                ? Array.from(document.querySelectorAll('table')).indexOf(table)
+                : -1;
+            const bodyIndex = table && rowGroup instanceof HTMLTableSectionElement
+                ? Array.from(table.tBodies).indexOf(rowGroup)
+                : -1;
+            const rowIndex = rowGroup && row
+                ? Array.from(rowGroup.rows).indexOf(row)
+                : -1;
+
+            sessionStorage.setItem(
+                scrollRestoreKey,
+                JSON.stringify({
+                    x: window.scrollX,
+                    y: window.scrollY,
+                    savedAt: Date.now(),
+                    ...(tableIndex >= 0 && rowIndex >= 0
+                        ? {
+                              deleteAnchor: {
+                                  tableId: table.id || null,
+                                  tableIndex,
+                                  bodyIndex,
+                                  rowIndex,
+                                  viewportTop: row.getBoundingClientRect().top,
+                              },
+                          }
+                        : {}),
+                })
+            );
+        });
+    }, true);
+
     const themeToggles = document.querySelectorAll('[data-theme-toggle]');
 
     const updateThemeControls = () => {

@@ -456,39 +456,19 @@ class SalaryCalculationService
 
              *
 
-             * Setiap 3 jam lembur penuh
-
-             * mendapatkan 1 kali uang makan.
+             * Uang makan diberikan maksimal satu kali per hari jika ada lembur.
 
              *
 
              * Contoh:
 
-             * 2 jam  -> 0
-
-             * 3 jam  -> 1
-
-             * 5 jam  -> 1
-
-             * 6 jam  -> 2
+             * Ada lembur -> 1
 
              */
 
-            $jumlahMakan = $jamLembur >= 3
-
-                ? (int) floor(
-
-                    $jamLembur / 3
-
-                )
-
+            $uangMakan = $jamLemburLibur > 0
+                ? $this->tarif('uang_makan_per_3_jam', 11000)
                 : 0;
-
-            $uangMakan =
-
-                $jumlahMakan
-
-                * $this->tarif('uang_makan_per_3_jam', 11000);
 
             return [
 
@@ -665,29 +645,15 @@ class SalaryCalculationService
 
         |
 
-        | Setiap 3 jam lembur penuh
-
-        | mendapatkan 1 kali uang makan.
+        | Uang makan diberikan maksimal satu kali per hari jika ada lembur.
 
         |
 
         */
 
-        $jumlahMakan = $jamLembur >= 3
-
-            ? (int) floor(
-
-                $jamLembur / 3
-
-            )
-
+        $uangMakan = $jamLemburBiasa > 0
+            ? $this->tarif('uang_makan_per_3_jam', 11000)
             : 0;
-
-        $uangMakan =
-
-            $jumlahMakan
-
-            * $this->tarif('uang_makan_per_3_jam', 11000);
 
         /*
 
@@ -869,6 +835,7 @@ class SalaryCalculationService
         $totalLembur = 0;
 
         $uangMakan = 0;
+        $uangMakanPerTanggal = [];
 
         foreach ($hasilHarian as $hasil) {
 
@@ -910,11 +877,23 @@ class SalaryCalculationService
 
                 $hasil['total_lembur'] ?? 0;
 
-            $uangMakan +=
+            $nominalUangMakan = (float) ($hasil['uang_makan_lembur'] ?? 0);
+            $tanggal = $hasil['tanggal'] ?? null;
 
-                $hasil['uang_makan_lembur'] ?? 0;
-
+            if ($tanggal === null || $tanggal === '') {
+                $uangMakan += $nominalUangMakan;
+            } else {
+                $tanggal = is_object($tanggal) && method_exists($tanggal, 'format')
+                    ? $tanggal->format('Y-m-d')
+                    : substr((string) $tanggal, 0, 10);
+                $uangMakanPerTanggal[$tanggal] = max(
+                    $uangMakanPerTanggal[$tanggal] ?? 0,
+                    $nominalUangMakan
+                );
+            }
         }
+
+        $uangMakan += array_sum($uangMakanPerTanggal);
 
         /*
 

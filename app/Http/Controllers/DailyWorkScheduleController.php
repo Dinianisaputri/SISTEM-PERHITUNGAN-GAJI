@@ -10,12 +10,11 @@ use Illuminate\Validation\Rule;
 class DailyWorkScheduleController extends Controller
 {
     /**
-     * Daftar penempatan aktif dari Master Data.
+     * Daftar bagian dari Master Data.
      */
-    private function penempatanList(): array
+    private function bagianList(): array
     {
-        return DB::table('master_penempatans')
-            ->where('is_active', true)
+        return DB::table('master_bagians')
             ->orderBy('nama')
             ->pluck('nama')
             ->toArray();
@@ -28,21 +27,21 @@ class DailyWorkScheduleController extends Controller
     {
         $query = DailyWorkSchedule::with('workSchedule')
             ->orderByDesc('tanggal')
-            ->orderBy('penempatan');
+            ->orderBy('bagian');
 
         if ($request->filled('tanggal')) {
             $query->whereDate('tanggal', $request->tanggal);
         }
 
-        if ($request->filled('penempatan')) {
-            $query->where('penempatan', $request->penempatan);
+        if ($request->filled('bagian')) {
+            $query->where('bagian', $request->bagian);
         }
 
         $dailySchedules = $query->paginate(15)->withQueryString();
 
         return view('daily-work-schedules.index', [
             'dailySchedules' => $dailySchedules,
-            'penempatanList' => $this->penempatanList(),
+            'bagianList' => $this->bagianList(),
         ]);
     }
 
@@ -53,10 +52,8 @@ class DailyWorkScheduleController extends Controller
     {
         return view('daily-work-schedules.create', [
             'dailySchedule' => null,
-            'workSchedules' => WorkSchedule::where('is_active', true)
-                ->orderBy('kode')
-                ->get(),
-            'penempatanList' => $this->penempatanList(),
+            'workSchedules' => WorkSchedule::orderBy('kode')->get(),
+            'bagianList' => $this->bagianList(),
         ]);
     }
 
@@ -67,17 +64,16 @@ class DailyWorkScheduleController extends Controller
     {
         $validated = $request->validate([
             'tanggal' => ['required', 'date'],
-            'penempatan' => [
+            'bagian' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::in($this->penempatanList()),
+                Rule::in($this->bagianList()),
             ],
             'work_schedule_id' => [
                 'required',
                 'integer',
-                Rule::exists('work_schedules', 'id')
-                    ->where('is_active', true),
+                Rule::exists('work_schedules', 'id'),
             ],
             'keterangan' => ['nullable', 'string', 'max:255'],
         ]);
@@ -86,15 +82,15 @@ class DailyWorkScheduleController extends Controller
             'tanggal',
             $validated['tanggal']
         )
-            ->where('penempatan', $validated['penempatan'])
+            ->where('bagian', $validated['bagian'])
             ->exists();
 
         if ($exists) {
             return back()
                 ->withInput()
                 ->withErrors([
-                    'penempatan' =>
-                        'Jadwal untuk penempatan ini pada tanggal tersebut sudah ada. Gunakan Edit untuk mengubahnya.',
+                    'bagian' =>
+                        'Jadwal untuk bagian ini pada tanggal tersebut sudah ada. Gunakan Edit untuk mengubahnya.',
                 ]);
         }
 
@@ -110,28 +106,25 @@ class DailyWorkScheduleController extends Controller
      */
     public function edit(DailyWorkSchedule $dailyWorkSchedule)
     {
-        $penempatanList = $this->penempatanList();
+        $bagianList = $this->bagianList();
 
-        // Pertahankan penempatan lama jika sudah dinonaktifkan.
+        // Pertahankan bagian lama meskipun data masternya sudah dihapus.
         if (
-            $dailyWorkSchedule->penempatan &&
+            $dailyWorkSchedule->bagian &&
             !in_array(
-                $dailyWorkSchedule->penempatan,
-                $penempatanList,
+                $dailyWorkSchedule->bagian,
+                $bagianList,
                 true
             )
         ) {
-            $penempatanList[] = $dailyWorkSchedule->penempatan;
-            sort($penempatanList);
+            $bagianList[] = $dailyWorkSchedule->bagian;
+            sort($bagianList);
         }
 
         return view('daily-work-schedules.edit', [
             'dailySchedule' => $dailyWorkSchedule,
-            'workSchedules' => WorkSchedule::where('is_active', true)
-                ->orWhere('id', $dailyWorkSchedule->work_schedule_id)
-                ->orderBy('kode')
-                ->get(),
-            'penempatanList' => $penempatanList,
+            'workSchedules' => WorkSchedule::orderBy('kode')->get(),
+            'bagianList' => $bagianList,
         ]);
     }
 
@@ -142,27 +135,27 @@ class DailyWorkScheduleController extends Controller
         Request $request,
         DailyWorkSchedule $dailyWorkSchedule
     ) {
-        $penempatanDiizinkan = $this->penempatanList();
+        $bagianDiizinkan = $this->bagianList();
 
-        // Izinkan nilai lama agar jadwal terdahulu tetap bisa diedit.
+        // Izinkan bagian lama agar jadwal terdahulu tetap bisa diedit.
         if (
-            $dailyWorkSchedule->penempatan &&
+            $dailyWorkSchedule->bagian &&
             !in_array(
-                $dailyWorkSchedule->penempatan,
-                $penempatanDiizinkan,
+                $dailyWorkSchedule->bagian,
+                $bagianDiizinkan,
                 true
             )
         ) {
-            $penempatanDiizinkan[] = $dailyWorkSchedule->penempatan;
+            $bagianDiizinkan[] = $dailyWorkSchedule->bagian;
         }
 
         $validated = $request->validate([
             'tanggal' => ['required', 'date'],
-            'penempatan' => [
+            'bagian' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::in(array_values(array_unique($penempatanDiizinkan))),
+                Rule::in(array_values(array_unique($bagianDiizinkan))),
             ],
             'work_schedule_id' => [
                 'required',
@@ -176,7 +169,7 @@ class DailyWorkScheduleController extends Controller
             'tanggal',
             $validated['tanggal']
         )
-            ->where('penempatan', $validated['penempatan'])
+            ->where('bagian', $validated['bagian'])
             ->where('id', '!=', $dailyWorkSchedule->id)
             ->exists();
 
@@ -184,8 +177,8 @@ class DailyWorkScheduleController extends Controller
             return back()
                 ->withInput()
                 ->withErrors([
-                    'penempatan' =>
-                        'Penempatan ini sudah memiliki jadwal pada tanggal tersebut.',
+                    'bagian' =>
+                        'Bagian ini sudah memiliki jadwal pada tanggal tersebut.',
                 ]);
         }
 

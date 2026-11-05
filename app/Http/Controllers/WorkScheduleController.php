@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\WorkSchedule;
+use App\Models\DailyWorkSchedule;
+use App\Models\EmployeeWorkSchedule;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -29,8 +31,6 @@ class WorkScheduleController extends Controller
             'jam_pulang' => ['required', 'date_format:H:i'],
             'keterangan' => ['nullable', 'string'],
         ]);
-
-        $validated['is_active'] = $request->boolean('is_active');
 
         WorkSchedule::create($validated);
 
@@ -59,8 +59,6 @@ class WorkScheduleController extends Controller
             'keterangan' => ['nullable', 'string'],
         ]);
 
-        $validated['is_active'] = $request->boolean('is_active');
-
         $workSchedule->update($validated);
 
         return redirect()
@@ -70,13 +68,21 @@ class WorkScheduleController extends Controller
 
     public function destroy(WorkSchedule $workSchedule)
     {
-        // Jadwal tidak dihapus agar riwayat dan relasi lama tetap aman.
-        $workSchedule->update([
-            'is_active' => false,
-        ]);
+        $isUsed = DailyWorkSchedule::where('work_schedule_id', $workSchedule->id)->exists()
+            || EmployeeWorkSchedule::where('work_schedule_id', $workSchedule->id)->exists();
+
+        if ($isUsed) {
+            return redirect()
+                ->route('work-schedules.index')
+                ->withErrors([
+                    'delete' => 'Jam kerja masih digunakan pada jadwal karyawan, sehingga tidak dapat dihapus.',
+                ]);
+        }
+
+        $workSchedule->delete();
 
         return redirect()
             ->route('work-schedules.index')
-            ->with('success', 'Jadwal berhasil dinonaktifkan.');
+            ->with('success', 'Jam kerja berhasil dihapus.');
     }
 }

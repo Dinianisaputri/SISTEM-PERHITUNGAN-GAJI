@@ -424,6 +424,7 @@ public function updateSalaryDetail(
 
         $gajiBersih = (float) $detail->gaji_kotor
             - $potonganAwal
+            + (float) ($detail->total_tambahan ?? 0)
             - $totalPotonganTambahan;
 
         $detail->update([
@@ -661,6 +662,7 @@ $salaryDetails = $period
         'Total Lembur',
         'Uang Makan',
         'Potongan Awal',
+        'Nominal Tambahan',
         'Potongan Tambahan',
         'Gaji Kotor',
         'Gaji Bersih',
@@ -794,6 +796,7 @@ $salaryDetails = $period
             (float) $detail->total_lembur,
             (float) $detail->uang_makan_lembur,
             (float) $detail->total_potongan,
+            (float) ($detail->total_tambahan ?? 0),
             (float) ($detail->potongan_tambahan ?? 0),
             (float) $detail->gaji_kotor,
             (float) $detail->gaji_bersih,
@@ -826,7 +829,7 @@ $salaryDetails = $period
 
    
     // Kolom nominal/jam dijumlahkan; kolom rekening dan tanda tangan tidak.
-    $sumIndexes = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    $sumIndexes = [0, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 
     foreach ($sumIndexes as $valueIndex) {
         $col = $summaryStartCol + $valueIndex;
@@ -1009,7 +1012,7 @@ $salaryDetails = $period
         );
 
     // Format nominal uang.
-    $moneyIndexes = [1, 2, 5, 6, 7, 8, 9, 10];
+    $moneyIndexes = [1, 2, 5, 6, 7, 8, 9, 10, 11];
 
     foreach ($moneyIndexes as $valueIndex) {
         $col = $summaryStartCol + $valueIndex;
@@ -1036,7 +1039,7 @@ $salaryDetails = $period
     }
 
     $sheet->getColumnDimension(
-        \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($summaryStartCol + 11)
+        \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($summaryStartCol + 12)
     )->setWidth(22);
 
     $sheet->getColumnDimension($lastLetter)->setWidth(18);

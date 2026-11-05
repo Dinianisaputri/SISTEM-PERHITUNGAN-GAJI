@@ -185,7 +185,7 @@
 
         {{-- MENU MOBILE --}}
         <details class="group relative xl:hidden">
-            <summary class="flex h-10 cursor-pointer list-none items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            <summary aria-label="Buka menu navigasi" class="flex h-11 cursor-pointer list-none items-center gap-2 rounded-lg border border-slate-200 px-3 text-sm font-medium text-slate-700 hover:bg-slate-50">
                 <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M3 5.75A.75.75 0 0 1 3.75 5h12.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 5.75Zm0 4.25a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 10Zm0 4.25a.75.75 0 0 1 .75-.75h12.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd"/>
                 </svg>
@@ -219,6 +219,7 @@
                 <p class="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Absensi</p>
                 <a href="{{ route('attendance.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Data fingerprint</a>
                 <a href="{{ route('attendance.unregistered') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">PIN belum terdaftar</a>
+                <a href="{{ route('work-schedules.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Master Jam Kerja</a>
                 <a href="{{ route('daily-work-schedules.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Jadwal Kerja Harian</a>
                 <a href="{{ route('holidays.index') }}" class="block rounded-lg px-3 py-2 text-sm {{ request()->routeIs('holidays.*') ? 'bg-emerald-50 font-medium text-emerald-800' : 'text-slate-700 hover:bg-slate-50' }}">Hari libur</a>
 
@@ -237,7 +238,6 @@
                 <a href="{{ route('contracts.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Surat Kontrak</a>
 
                 <p class="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400">Pengaturan</p>
-                                <a href="{{ route('work-schedules.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Master Jam Kerja</a>
                 <a href="{{ route('accounts.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50">Data akun</a>
                 <a href="{{ route('master-data.bagian.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"> Master Bagian</a>
                 <a href="{{ route('master-data.jabatan.index') }}" class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-50"> Master Jabatan</a>

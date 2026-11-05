@@ -21,6 +21,14 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="mb-4 rounded-lg bg-red-100 p-3 text-red-800">
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
+
             <div class="mb-4 flex justify-between items-center">
                 <p class="text-sm text-gray-600">
                     Kelola kode dan jam kerja yang digunakan dalam penjadwalan.
@@ -40,7 +48,6 @@
                             <th class="px-4 py-3 text-left text-sm">Nama Jadwal</th>
                             <th class="px-4 py-3 text-left text-sm">Jam Masuk</th>
                             <th class="px-4 py-3 text-left text-sm">Jam Pulang</th>
-                            <th class="px-4 py-3 text-left text-sm">Status</th>
                             <th class="px-4 py-3 text-left text-sm">Aksi</th>
                         </tr>
                     </thead>
@@ -59,42 +66,29 @@
                                     {{ substr($schedule->jam_pulang, 0, 5) }}
                                 </td>
                                 <td class="px-4 py-3">
-                                    @if ($schedule->is_active)
-                                        <span class="rounded-full bg-green-100 px-2 py-1 text-xs text-green-700">
-                                            Aktif
-                                        </span>
-                                    @else
-                                        <span class="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-600">
-                                            Nonaktif
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3">
                                     <div class="flex flex-wrap gap-2">
                                         <a href="{{ route('work-schedules.edit', $schedule) }}"
                                            class="text-indigo-600 hover:underline">
                                             Edit
                                         </a>
 
-                                        @if ($schedule->is_active)
-                                            <form action="{{ route('work-schedules.destroy', $schedule) }}"
-                                                  method="POST"
-                                                  onsubmit="return confirm('Nonaktifkan jadwal ini?')">
-                                                @csrf
-                                                @method('DELETE')
+                                        <form action="{{ route('work-schedules.destroy', $schedule) }}"
+                                              method="POST"
+                                              onsubmit="return confirm('Hapus jam kerja ini? Jadwal yang masih digunakan tidak dapat dihapus.')">
+                                            @csrf
+                                            @method('DELETE')
 
-                                                <button type="submit"
-                                                        class="text-red-600 hover:underline">
-                                                    Nonaktifkan
-                                                </button>
-                                            </form>
-                                        @endif
+                                            <button type="submit"
+                                                    class="text-red-600 hover:underline">
+                                                Hapus
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="6" class="px-4 py-6 text-center text-gray-500">
+                                <td colspan="5" class="px-4 py-6 text-center text-gray-500">
                                     Belum ada data jam kerja.
                                 </td>
                             </tr>

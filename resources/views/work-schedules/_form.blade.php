@@ -68,15 +68,6 @@
         @enderror
     </div>
 
-    <div class="flex items-center gap-2">
-        <input id="is_active" name="is_active" type="checkbox" value="1"
-               @checked(old('is_active', $workSchedule?->is_active ?? true))
-               class="rounded border-gray-300">
-        <label for="is_active" class="text-sm">
-            Jadwal aktif
-        </label>
-    </div>
-
     <div class="flex gap-3 pt-2">
         <button type="submit"
                 class="rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-700">

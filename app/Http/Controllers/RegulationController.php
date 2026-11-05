@@ -16,7 +16,6 @@ class RegulationController extends Controller
   private function kategoriList()
 {
     return DB::table('master_kategori_regulations')
-        ->where('is_active', true)
         ->orderBy('nama')
         ->pluck('nama')
         ->toArray();

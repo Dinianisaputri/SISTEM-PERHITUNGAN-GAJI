@@ -11,6 +11,7 @@ class DailyWorkSchedule extends Model
 
     protected $fillable = [
         'tanggal',
+        'bagian',
         'penempatan',
         'work_schedule_id',
         'keterangan',

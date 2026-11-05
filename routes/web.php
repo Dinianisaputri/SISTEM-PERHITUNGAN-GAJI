@@ -103,6 +103,14 @@ Route::middleware('auth')->group(function () {
     Route::put('/pengaturan-tarif', [SalarySettingController::class, 'update'])
         ->name('salary-settings.update');
 
+    Route::post('/pengaturan-tarif/tarif-bulanan', [SalarySettingController::class, 'storeMonthlyRate'])
+        ->name('salary-settings.monthly-rates.store');
+
+    Route::delete(
+        '/pengaturan-tarif/tarif-bulanan/{employee}/{rate}',
+        [SalarySettingController::class, 'destroyMonthlyRate']
+    )->name('salary-settings.monthly-rates.destroy');
+
     Route::get('/hitung-gaji', function () {
         return redirect()->route('salary-settings.index');
     })->name('checklogs.index');
@@ -154,6 +162,9 @@ Route::resource(
     Route::post('/gaji/{employee}/detail', [SalaryController::class, 'updateDetail'])
         ->name('salary.detail.update');
 
+    Route::put('/gaji/{employee}/detail/absensi/istirahat', [SalaryController::class, 'updateAttendanceBreak'])
+        ->name('salary.attendance.break.update');
+
     Route::post('/gaji/{employee}/detail/potongan', [SalaryController::class, 'storeDeduction'])
         ->name('salary.deduction.store');
 
@@ -166,6 +177,19 @@ Route::resource(
         '/gaji/{employee}/detail/potongan/{deduction}',
         [SalaryController::class, 'destroyDeduction']
     )->name('salary.deduction.destroy');
+
+    Route::post('/gaji/{employee}/detail/tambahan', [SalaryController::class, 'storeAddition'])
+        ->name('salary.addition.store');
+
+    Route::put(
+        '/gaji/{employee}/detail/tambahan/{addition}',
+        [SalaryController::class, 'updateAddition']
+    )->name('salary.addition.update');
+
+    Route::delete(
+        '/gaji/{employee}/detail/tambahan/{addition}',
+        [SalaryController::class, 'destroyAddition']
+    )->name('salary.addition.destroy');
 
     Route::match(['GET', 'POST'], '/gaji/arsipkan', [SalaryController::class, 'archive'])
         ->name('salary.archive');
@@ -266,8 +290,8 @@ Route::middleware('auth')
             ->name('bagian.store');
         Route::put('/bagian/{masterBagian}', [MasterBagianController::class, 'update'])
             ->name('bagian.update');
-        Route::patch('/bagian/{masterBagian}/toggle', [MasterBagianController::class, 'toggle'])
-            ->name('bagian.toggle');
+        Route::delete('/bagian/{masterBagian}', [MasterBagianController::class, 'destroy'])
+            ->name('bagian.destroy');
 
         // Jabatan
         Route::get('/jabatan', [MasterJabatanController::class, 'index'])
@@ -276,8 +300,8 @@ Route::middleware('auth')
             ->name('jabatan.store');
         Route::put('/jabatan/{masterJabatan}', [MasterJabatanController::class, 'update'])
             ->name('jabatan.update');
-        Route::patch('/jabatan/{masterJabatan}/toggle', [MasterJabatanController::class, 'toggle'])
-            ->name('jabatan.toggle');
+        Route::delete('/jabatan/{masterJabatan}', [MasterJabatanController::class, 'destroy'])
+            ->name('jabatan.destroy');
 
         // Penempatan
         Route::get('/penempatan', [MasterPenempatanController::class, 'index'])
@@ -286,8 +310,8 @@ Route::middleware('auth')
             ->name('penempatan.store');
         Route::put('/penempatan/{masterPenempatan}', [MasterPenempatanController::class, 'update'])
             ->name('penempatan.update');
-        Route::patch('/penempatan/{masterPenempatan}/toggle', [MasterPenempatanController::class, 'toggle'])
-            ->name('penempatan.toggle');
+        Route::delete('/penempatan/{masterPenempatan}', [MasterPenempatanController::class, 'destroy'])
+            ->name('penempatan.destroy');
 
         // Kategori Regulasi
         Route::get('/kategori-regulasi', [MasterKategoriRegulationController::class, 'index'])
@@ -296,8 +320,8 @@ Route::middleware('auth')
             ->name('kategori-regulasi.store');
         Route::put('/kategori-regulasi/{masterKategoriRegulation}', [MasterKategoriRegulationController::class, 'update'])
             ->name('kategori-regulasi.update');
-        Route::patch('/kategori-regulasi/{masterKategoriRegulation}/toggle', [MasterKategoriRegulationController::class, 'toggle'])
-            ->name('kategori-regulasi.toggle');
+        Route::delete('/kategori-regulasi/{masterKategoriRegulation}', [MasterKategoriRegulationController::class, 'destroy'])
+            ->name('kategori-regulasi.destroy');
     });
 Route::get(
     'warning-letters/{warningLetter}/print',

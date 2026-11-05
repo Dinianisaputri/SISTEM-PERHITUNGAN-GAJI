@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterBagian;
+use App\Models\DailyWorkSchedule;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -39,13 +41,20 @@ class MasterBagianController extends Controller
         return back()->with('success', 'Bagian berhasil diperbarui.');
     }
 
-    public function toggle(MasterBagian $masterBagian)
+    public function destroy(MasterBagian $masterBagian)
     {
-        $masterBagian->update([
-            'is_active' => !$masterBagian->is_active,
-        ]);
+        $isUsed = Employee::where('bagian', $masterBagian->nama)->exists()
+            || DailyWorkSchedule::where('bagian', $masterBagian->nama)->exists();
 
-        return back()->with('success', 'Status bagian berhasil diubah.');
+        if ($isUsed) {
+            return back()->withErrors([
+                'delete' => 'Bagian masih digunakan pada data karyawan atau jadwal kerja harian, sehingga tidak dapat dihapus.',
+            ]);
+        }
+
+        $masterBagian->delete();
+
+        return back()->with('success', 'Bagian berhasil dihapus.');
     }
     
 }

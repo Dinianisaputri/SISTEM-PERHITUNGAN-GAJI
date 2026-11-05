@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterKategoriRegulation;
+use App\Models\Regulation;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -45,12 +46,16 @@ class MasterKategoriRegulationController extends Controller
         return back()->with('success', 'Kategori regulasi berhasil diperbarui.');
     }
 
-    public function toggle(MasterKategoriRegulation $masterKategoriRegulation)
+    public function destroy(MasterKategoriRegulation $masterKategoriRegulation)
     {
-        $masterKategoriRegulation->update([
-            'is_active' => !$masterKategoriRegulation->is_active,
-        ]);
+        if (Regulation::where('kategori', $masterKategoriRegulation->nama)->exists()) {
+            return back()->withErrors([
+                'delete' => 'Kategori masih digunakan pada data regulasi, sehingga tidak dapat dihapus.',
+            ]);
+        }
 
-        return back()->with('success', 'Status kategori regulasi berhasil diubah.');
+        $masterKategoriRegulation->delete();
+
+        return back()->with('success', 'Kategori regulasi berhasil dihapus.');
     }
 }

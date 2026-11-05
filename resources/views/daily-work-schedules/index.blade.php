@@ -17,7 +17,7 @@
 
             <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <p class="text-sm text-gray-600">
-                    Atur jadwal setiap unit berdasarkan tanggal.
+                    Atur jadwal kerja berdasarkan bagian dan tanggal.
                 </p>
 
                 <a href="{{ route('daily-work-schedules.create') }}"
@@ -37,21 +37,21 @@
                            class="rounded-lg border-gray-300">
                 </div>             
 <div>
-    <label for="penempatan" class="mb-1 block text-sm font-medium text-gray-700">
-        Penempatan
+    <label for="bagian" class="mb-1 block text-sm font-medium text-gray-700">
+        Bagian
     </label>
 
-    <select name="penempatan" class="w-full rounded-lg border-gray-300">
-    <option value="">Semua Penempatan</option>
+    <select id="bagian" name="bagian" class="w-full rounded-lg border-gray-300">
+    <option value="">Semua Bagian</option>
 
-    @foreach ($penempatanList as $penempatan)
-        <option value="{{ $penempatan }}"
-            @selected(request('penempatan') === $penempatan)>
-            {{ $penempatan }}
+    @foreach ($bagianList as $bagian)
+        <option value="{{ $bagian }}"
+            @selected(request('bagian') === $bagian)>
+            {{ $bagian }}
         </option>
     @endforeach
 </select>
-    @error('penempatan')
+    @error('bagian')
         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
     @enderror
 </div>
@@ -73,7 +73,7 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-sm">Tanggal</th>
-                            <th class="px-4 py-3 text-left text-sm">Unit</th>
+                            <th class="px-4 py-3 text-left text-sm">Bagian</th>
                             <th class="px-4 py-3 text-left text-sm">Kode Jadwal</th>
                             <th class="px-4 py-3 text-left text-sm">Jam Kerja</th>
                             <th class="px-4 py-3 text-left text-sm">Keterangan</th>
@@ -87,7 +87,7 @@
                                 <td class="px-4 py-3">
                                     {{ $item->tanggal->format('d-m-Y') }}
                                 </td>
-                                <td class="px-4 py-3">{{ $item->penempatan }}</td>
+                                <td class="px-4 py-3">{{ $item->bagian ?: 'Belum dipetakan' }}</td>
                                 <td class="px-4 py-3 font-medium">
                                     {{ $item->workSchedule->kode ?? 'Jadwal tidak ditemukan' }}
                                 </td>

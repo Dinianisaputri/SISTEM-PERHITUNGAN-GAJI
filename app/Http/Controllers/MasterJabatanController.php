@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterJabatan;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -39,12 +40,16 @@ class MasterJabatanController extends Controller
         return back()->with('success', 'Jabatan berhasil diperbarui.');
     }
 
-    public function toggle(MasterJabatan $masterJabatan)
+    public function destroy(MasterJabatan $masterJabatan)
     {
-        $masterJabatan->update([
-            'is_active' => !$masterJabatan->is_active,
-        ]);
+        if (Employee::where('jabatan', $masterJabatan->nama)->exists()) {
+            return back()->withErrors([
+                'delete' => 'Jabatan masih digunakan pada data karyawan, sehingga tidak dapat dihapus.',
+            ]);
+        }
 
-        return back()->with('success', 'Status jabatan berhasil diubah.');
+        $masterJabatan->delete();
+
+        return back()->with('success', 'Jabatan berhasil dihapus.');
     }
 }

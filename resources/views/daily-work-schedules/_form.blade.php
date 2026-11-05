@@ -19,26 +19,26 @@
     </div>
 
     <div>
-        <label for="penempatan" class="block text-sm font-medium text-gray-700">
-            Penempatan
+        <label for="bagian" class="block text-sm font-medium text-gray-700">
+            Bagian
         </label>
         <select
-            name="penempatan"
-            id="penempatan"
+            name="bagian"
+            id="bagian"
             required
             class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
         >
-            <option value="">-- Pilih Penempatan --</option>
-            @foreach ($penempatanList as $penempatan)
+            <option value="">-- Pilih Bagian --</option>
+            @foreach ($bagianList as $bagian)
                 <option
-                    value="{{ $penempatan }}"
-                    @selected(old('penempatan', $dailySchedule?->penempatan) === $penempatan)
+                    value="{{ $bagian }}"
+                    @selected(old('bagian', $dailySchedule?->bagian) === $bagian)
                 >
-                    {{ $penempatan }}
+                    {{ $bagian }}
                 </option>
             @endforeach
         </select>
-        @error('penempatan')
+        @error('bagian')
             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
         @enderror
     </div>

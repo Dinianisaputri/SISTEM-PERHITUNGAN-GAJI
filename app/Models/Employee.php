@@ -92,6 +92,11 @@ class Employee extends Model
         return $this->hasMany(Contract::class);
     }
 
+    public function salaryRates(): HasMany
+    {
+        return $this->hasMany(EmployeeSalaryRate::class);
+    }
+
     public function provinsi(): BelongsTo
     {
         return $this->belongsTo(Region::class, 'provinsi_id');

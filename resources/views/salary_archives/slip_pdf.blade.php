@@ -586,8 +586,24 @@
     <td>{{ $rupiah($detail->gaji_kotor) }}</td>
 </tr>
 
+                                @if ((float) ($detail->total_tambahan ?? 0) > 0)
+                                    @php
+                                        $rincianNominalTambahan = $detail->rincian_nominal_tambahan ?? [];
+                                    @endphp
+                                    @foreach ($rincianNominalTambahan as $tambahan)
+                                        <tr>
+                                            <td>{{ $tambahan['nama_tambahan'] ?? 'Nominal tambahan' }}</td>
+                                            <td>+{{ $rupiah($tambahan['nominal'] ?? 0) }}</td>
+                                        </tr>
+                                    @endforeach
+                                    <tr>
+                                        <td>Total nominal tambahan</td>
+                                        <td>+{{ $rupiah($detail->total_tambahan) }}</td>
+                                    </tr>
+                                @endif
 
-<tr>
+
+                                <tr>
     <td>
         Total potongan
         @if ($adaPotonganBpjs)

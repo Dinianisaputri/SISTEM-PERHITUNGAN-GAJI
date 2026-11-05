@@ -24,6 +24,8 @@ class SalaryArchiveDetail extends Model
         'total_lembur',
         'uang_makan_lembur',
         'total_potongan',
+        'total_tambahan',
+        'rincian_nominal_tambahan',
         'rincian_potongan',
         'rincian_potongan_tambahan',
         'gaji_kotor',
@@ -37,6 +39,7 @@ class SalaryArchiveDetail extends Model
     {
         return [
             'rincian_potongan' => 'array',
+            'rincian_nominal_tambahan' => 'array',
             'rincian_potongan_tambahan' => 'array',
             'daily_breakdown' => 'array',
         ];

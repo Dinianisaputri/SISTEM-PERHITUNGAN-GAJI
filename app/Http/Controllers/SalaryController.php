@@ -8,6 +8,8 @@ use App\Models\Holiday;
 use App\Models\SalaryDetail;
 use App\Models\SalaryPeriod;
 use App\Models\SalaryDeduction;
+use App\Models\SalaryAddition;
+use App\Models\SalaryAttendance;
 use App\Services\SalaryCalculationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -17,6 +19,7 @@ use App\Models\SalarySetting;
 use Illuminate\Support\Facades\DB;
 use App\Models\SalaryArchive;
 use App\Models\SalaryArchiveDetail;
+use App\Models\EmployeeSalaryRate;
 
 class SalaryController extends Controller
 {
@@ -209,6 +212,23 @@ class SalaryController extends Controller
                 ->keyBy('employee_id');
         }
 
+        $salaryBreakOverrides = collect();
+
+        if ($salaryDetails->isNotEmpty()) {
+            $salaryBreakOverrides = SalaryAttendance::query()
+                ->whereIn('salary_detail_id', $salaryDetails->pluck('id'))
+                ->get(['salary_detail_id', 'tanggal', 'jam_istirahat'])
+                ->groupBy('salary_detail_id')
+                ->map(function ($attendances) {
+                    return $attendances->mapWithKeys(function ($attendance) {
+                        return [
+                            $attendance->tanggal->format('Y-m-d') =>
+                                (float) $attendance->jam_istirahat,
+                        ];
+                    });
+                });
+        }
+
         /*
         |--------------------------------------------------------------------------
         | Perhitungan Semua Karyawan
@@ -218,8 +238,10 @@ class SalaryController extends Controller
             function ($employee) use (
                 $attendanceLogs,
                 $salaryDetails,
+                $salaryBreakOverrides,
                 $salaryService,
-                $holidayDates
+                $holidayDates,
+                $tanggalMulai
             ) {
                 $logs = $attendanceLogs->get(
                     (string) $employee->fingerprint_pin,
@@ -268,7 +290,7 @@ class SalaryController extends Controller
                 } elseif ($isBulanan) {
                     $tarifHarian = $salaryDetail
                         ? (float) $salaryDetail->tarif_harian
-                        : 0;
+                        : $this->employeeDailyRateAt($employee, $tanggalMulai);
                 } else {
                     $tarifHarian = 0;
                 }
@@ -280,6 +302,10 @@ class SalaryController extends Controller
                 $jamIstirahat = $salaryDetail
                     ? (float) $salaryDetail->jam_istirahat
                     : 1;
+                $dailyBreakOverrides = $salaryBreakOverrides->get(
+                    $salaryDetail?->id,
+                    collect()
+                );
 
                 /*
                 |--------------------------------------------------------------------------
@@ -294,6 +320,7 @@ class SalaryController extends Controller
                             $tarifHarian,
                             $tarifJam,
                             $jamIstirahat,
+                            $dailyBreakOverrides,
                             $holidayDates,
                             $isBorongan,
                             $isDapur,
@@ -316,9 +343,13 @@ class SalaryController extends Controller
                             );
 
                             $tanggal = $tanggalShift;
+                            $jamIstirahatHarian = (float) $dailyBreakOverrides->get(
+                                $tanggal,
+                                $jamIstirahat
+                            );
 
                    
-                    // Jadwal khusus karyawan diprioritaskan, lalu jadwal harian berdasarkan penempatan.
+                    // Jadwal khusus karyawan diprioritaskan, lalu jadwal harian berdasarkan bagian.
                     $schedule = $this->getWorkSchedule(
                         $employee->id,
                         $tanggal
@@ -351,7 +382,7 @@ class SalaryController extends Controller
                                     'jam_masuk_jadwal' => $jamMasukJadwal,
                                     'jam_pulang_jadwal' => $jamPulangJadwal,
                                     'jam_bruto' => 0,
-                                    'jam_istirahat' => $jamIstirahat,
+                                    'jam_istirahat' => $jamIstirahatHarian,
                                     'jam_kerja' => 0,
                                     'jam_lembur' => 0,
                                     'jam_lembur_biasa' => 0,
@@ -406,7 +437,7 @@ class SalaryController extends Controller
                             */
 
                             $jamKerja = max(
-                                $jamBruto - $jamIstirahat,
+                                $jamBruto - $jamIstirahatHarian,
                                 0
                             );
 
@@ -424,7 +455,7 @@ class SalaryController extends Controller
                                     'jam_masuk_jadwal' => $jamMasukJadwal,
                                     'jam_pulang_jadwal' => $jamPulangJadwal,
                                     'jam_bruto' => round($jamBruto, 2),
-                                    'jam_istirahat' => $jamIstirahat,
+                                    'jam_istirahat' => $jamIstirahatHarian,
                                     'jam_kerja' => round($jamKerja, 2),
                                     'jam_lembur' => 0,
                                     'jam_lembur_biasa' => 0,
@@ -454,7 +485,7 @@ class SalaryController extends Controller
                                     ->calculateBorongan(
                                         $jamMasuk->format('H:i:s'),
                                         $jamPulang->format('H:i:s'),
-                                        $jamIstirahat,
+                                        $jamIstirahatHarian,
                                         $tarifJam
                                     );
 
@@ -508,7 +539,7 @@ class SalaryController extends Controller
                                 'jam_masuk_jadwal' => $jamMasukJadwal,
                                 'jam_pulang_jadwal' => $jamPulangJadwal,
                                 'jam_bruto' => round($jamBruto, 2),
-                                'jam_istirahat' => $jamIstirahat,
+                                'jam_istirahat' => $jamIstirahatHarian,
                                 'jam_kerja' => round($jamKerja, 2),
                                 'jam_lembur' => $hasil['jam_lembur'],
                                 'jam_lembur_biasa' => $hasil['jam_lembur_biasa'],
@@ -550,7 +581,7 @@ class SalaryController extends Controller
                         'jam_masuk' => null,
                         'jam_pulang' => null,
                         'jam_bruto' => 0,
-                        'jam_istirahat' => $jamIstirahat,
+                        'jam_istirahat' => $jamIstirahatHarian,
                         'jam_kerja' => 0,
                         'jam_lembur' => 0,
                         'jam_lembur_biasa' => 0,
@@ -631,13 +662,18 @@ class SalaryController extends Controller
                     $totalLembur = 0;
 
                     $uangMakanLembur = round(
-                        $dailyAttendance->sum('uang_makan_lembur'),
+                        $this->sumDailyMealAllowance($dailyAttendance),
                         2
                     );
 
                     $totalPotongan = $salaryDetail
                         ? (float) $salaryDetail
                             ->deductions()
+                            ->sum('nominal')
+                        : 0;
+                    $totalTambahan = $salaryDetail
+                        ? (float) $salaryDetail
+                            ->additions()
                             ->sum('nominal')
                         : 0;
                 } elseif ($isHarian || $isBulanan) {
@@ -652,7 +688,7 @@ class SalaryController extends Controller
                     );
 
                     $uangMakanLembur = round(
-                        $dailyAttendance->sum('uang_makan_lembur'),
+                        $this->sumDailyMealAllowance($dailyAttendance),
                         2
                     );
 
@@ -661,6 +697,13 @@ class SalaryController extends Controller
                             ->deductions()
                             ->sum('nominal')
                         : 0;
+                    $totalTambahan = $salaryDetail
+                        ? (float) $salaryDetail
+                            ->additions()
+                            ->sum('nominal')
+                        : 0;
+                } else {
+                    $totalTambahan = 0;
                 }
 
                 /*
@@ -677,7 +720,7 @@ class SalaryController extends Controller
                 );
 
                 $gajiBersih = max(
-                    $gajiKotor - $totalPotongan,
+                    $gajiKotor - $totalPotongan + $totalTambahan,
                     0
                 );
 
@@ -696,6 +739,7 @@ class SalaryController extends Controller
                     'total_lembur' => $totalLembur,
                     'uang_makan_lembur' => $uangMakanLembur,
                     'total_potongan' => $totalPotongan,
+                    'total_tambahan' => $totalTambahan,
                     'gaji_kotor' => $gajiKotor,
                     'gaji_bersih' => $gajiBersih,
                     'jenis_karyawan_kosong' => !$isValidType,
@@ -844,7 +888,7 @@ class SalaryController extends Controller
         } elseif ($isBulanan) {
             $tarifHarian = $salaryDetail
                 ? (float) $salaryDetail->tarif_harian
-                : 0;
+                : $this->employeeDailyRateAt($employee, $tanggalMulai);
         } else {
             $tarifHarian = 0;
         }
@@ -856,6 +900,16 @@ class SalaryController extends Controller
         $jamIstirahat = $salaryDetail
             ? (float) $salaryDetail->jam_istirahat
             : 1;
+        $dailyBreakOverrides = $salaryDetail
+            ? $salaryDetail->attendances()
+                ->get(['tanggal', 'jam_istirahat'])
+                ->mapWithKeys(function ($attendance) {
+                    return [
+                        $attendance->tanggal->format('Y-m-d') =>
+                            (float) $attendance->jam_istirahat,
+                    ];
+                })
+            : collect();
 
         /*
         |--------------------------------------------------------------------------
@@ -912,6 +966,7 @@ class SalaryController extends Controller
                     $tarifHarian,
                     $tarifJam,
                     $jamIstirahat,
+                    $dailyBreakOverrides,
                     $holidayDates,
                     $isBorongan,
                     $isDapur,
@@ -934,8 +989,12 @@ class SalaryController extends Controller
                     );
 
                     $tanggal = $tanggalShift;
+                    $jamIstirahatHarian = (float) $dailyBreakOverrides->get(
+                        $tanggal,
+                        $jamIstirahat
+                    );
 
-                    // Jadwal khusus karyawan diprioritaskan, lalu jadwal harian berdasarkan penempatan.
+                    // Jadwal khusus karyawan diprioritaskan, lalu jadwal harian berdasarkan bagian.
                     $schedule = $this->getWorkSchedule(
                         $employee->id,
                         $tanggal
@@ -967,7 +1026,7 @@ class SalaryController extends Controller
                             'jam_masuk_jadwal' => $jamMasukJadwal,
                             'jam_pulang_jadwal' => $jamPulangJadwal,
                             'jam_bruto' => 0,
-                            'jam_istirahat' => $jamIstirahat,
+                            'jam_istirahat' => $jamIstirahatHarian,
                             'jam_kerja' => 0,
                             'jam_lembur' => 0,
                             'jam_lembur_biasa' => 0,
@@ -1023,7 +1082,7 @@ class SalaryController extends Controller
                     */
 
                     $jamKerja = max(
-                        $jamBruto - $jamIstirahat,
+                        $jamBruto - $jamIstirahatHarian,
                         0
                     );
 
@@ -1041,7 +1100,7 @@ class SalaryController extends Controller
                             'jam_masuk_jadwal' => $jamMasukJadwal,
                             'jam_pulang_jadwal' => $jamPulangJadwal,
                             'jam_bruto' => round($jamBruto, 2),
-                            'jam_istirahat' => $jamIstirahat,
+                            'jam_istirahat' => $jamIstirahatHarian,
                             'jam_kerja' => round($jamKerja, 2),
                             'jam_lembur' => 0,
                             'jam_lembur_biasa' => 0,
@@ -1066,7 +1125,7 @@ class SalaryController extends Controller
                             ->calculateBorongan(
                                 $jamMasuk->format('H:i:s'),
                                 $jamPulang->format('H:i:s'),
-                                $jamIstirahat,
+                                $jamIstirahatHarian,
                                 $tarifJam
                             );
 
@@ -1115,7 +1174,7 @@ class SalaryController extends Controller
                         'jam_masuk_jadwal' => $jamMasukJadwal,
                         'jam_pulang_jadwal' => $jamPulangJadwal,
                         'jam_bruto' => round($jamBruto, 2),
-                        'jam_istirahat' => $jamIstirahat,
+                        'jam_istirahat' => $jamIstirahatHarian,
                         'jam_kerja' => round($jamKerja, 2),
                         'jam_lembur' => $hasil['jam_lembur'],
                         'jam_lembur_biasa' => $hasil['jam_lembur_biasa'],
@@ -1150,7 +1209,10 @@ class SalaryController extends Controller
                 'jam_masuk' => null,
                 'jam_pulang' => null,
                 'jam_bruto' => 0,
-                'jam_istirahat' => $jamIstirahat,
+                'jam_istirahat' => (float) $dailyBreakOverrides->get(
+                    $tanggal,
+                    $jamIstirahat
+                ),
                 'jam_kerja' => 0,
                 'jam_lembur' => 0,
                 'jam_lembur_biasa' => 0,
@@ -1235,7 +1297,7 @@ class SalaryController extends Controller
             $totalLembur = 0;
 
             $uangMakanLembur = round(
-                $attendance->sum('uang_makan_lembur'),
+                $this->sumDailyMealAllowance($attendance),
                 2
             );
         } elseif ($isHarian || $isBulanan) {
@@ -1250,7 +1312,7 @@ class SalaryController extends Controller
             );
 
             $uangMakanLembur = round(
-                $attendance->sum('uang_makan_lembur'),
+                $this->sumDailyMealAllowance($attendance),
                 2
             );
         }
@@ -1268,10 +1330,19 @@ class SalaryController extends Controller
                 ->get()
             : collect();
 
+        $additions = $salaryDetail
+            ? $salaryDetail
+                ->additions()
+                ->orderBy('id')
+                ->get()
+            : collect();
+
         if ($isValidType) {
             $totalPotongan = (float) $deductions->sum('nominal');
+            $totalTambahan = (float) $additions->sum('nominal');
         } else {
             $totalPotongan = 0;
+            $totalTambahan = 0;
         }
 
         /*
@@ -1288,7 +1359,7 @@ class SalaryController extends Controller
         );
 
         $gajiBersih = max(
-            $gajiKotor - $totalPotongan,
+            $gajiKotor - $totalPotongan + $totalTambahan,
             0
         );
 
@@ -1308,6 +1379,7 @@ class SalaryController extends Controller
             'total_lembur' => $totalLembur,
             'uang_makan_lembur' => $uangMakanLembur,
             'total_potongan' => $totalPotongan,
+            'total_tambahan' => $totalTambahan,
             'gaji_kotor' => $gajiKotor,
             'gaji_bersih' => $gajiBersih,
         ];
@@ -1323,6 +1395,7 @@ return view(
         'attendance',
         'salarySummary',
         'deductions',
+        'additions',
         'tarifHarian',
         'tarifJam'
     )
@@ -1417,9 +1490,9 @@ return view(
             $detail->tarif_harian = $this->salarySetting('harian_per_hari', 127855);
             $detail->tarif_jam = 0;
         } elseif ($jenisKaryawan === 'bulanan') {
-            $detail->tarif_harian =
-                (float) ($data['tarif_harian'] ?? 0);
-
+            $detail->tarif_harian = $detail->exists && (float) $detail->tarif_harian > 0
+                ? (float) $detail->tarif_harian
+                : $this->employeeDailyRateAt($employee, $data['tanggal_mulai']);
             $detail->tarif_jam = 0;
         } elseif ($jenisKaryawan === 'borongan') {
             $detail->tarif_harian = 0;
@@ -1469,6 +1542,76 @@ return view(
                 'success',
                 'Pengaturan gaji berhasil disimpan.'
             );
+    }
+
+    public function updateAttendanceBreak(
+        Request $request,
+        Employee $employee
+    ) {
+        $data = $request->validate([
+            'tanggal_mulai' => ['required', 'date'],
+            'tanggal_selesai' => [
+                'required',
+                'date',
+                'after_or_equal:tanggal_mulai',
+            ],
+            'tanggal' => ['required', 'date'],
+            'jam_istirahat' => ['required', 'numeric', 'min:0', 'max:24'],
+        ]);
+
+        if (strtolower(trim((string) $employee->jenis_karyawan)) !== 'borongan') {
+            abort(404);
+        }
+
+        if (
+            $data['tanggal'] < $data['tanggal_mulai'] ||
+            $data['tanggal'] > $data['tanggal_selesai']
+        ) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'tanggal' => 'Tanggal absensi berada di luar periode payroll.',
+                ]);
+        }
+
+        $period = SalaryPeriod::firstOrCreate(
+            [
+                'tanggal_mulai' => $data['tanggal_mulai'],
+                'tanggal_selesai' => $data['tanggal_selesai'],
+            ],
+            ['status' => 'draft']
+        );
+
+        $salaryDetail = SalaryDetail::firstOrCreate(
+            [
+                'salary_period_id' => $period->id,
+                'employee_id' => $employee->id,
+            ],
+            [
+                'jenis_karyawan' => $employee->jenis_karyawan,
+                'tarif_harian' => $this->employeeDailyRateAt($employee, $data['tanggal_mulai']),
+                'tarif_jam' => $this->salarySetting('borongan_per_jam', 18000),
+                'tarif_lembur_biasa' => $this->salarySetting('lembur_biasa_per_jam', 18500),
+                'tarif_lembur_libur' => $this->salarySetting('lembur_libur_per_jam', 37000),
+                'tarif_uang_makan' => $this->salarySetting('uang_makan_per_3_jam', 11000),
+                'jam_istirahat' => 1,
+            ]
+        );
+
+        $salaryDetail->attendances()->updateOrCreate(
+            ['tanggal' => $data['tanggal']],
+            ['jam_istirahat' => $data['jam_istirahat']]
+        );
+
+        return redirect()
+            ->route(
+                'salary.detail',
+                array_merge(
+                    ['employee' => $employee->id],
+                    $this->filterParams($request)
+                )
+            )
+            ->with('success', 'Jam istirahat harian berhasil diperbarui.');
     }
 
     /*
@@ -1572,10 +1715,10 @@ return view(
             )
         );
 
-        $defaultTarifHarian =
-            $jenisKaryawan === 'harian'
-                ? $this->salarySetting('harian_per_hari', 127855)
-                : 0;
+        $defaultTarifHarian = $this->employeeDailyRateAt(
+            $employee,
+            $validated['tanggal_mulai']
+        );
 
         $defaultTarifJam =
             $jenisKaryawan === 'borongan'
@@ -1785,6 +1928,141 @@ return view(
             );
     }
 
+    public function storeAddition(
+        Request $request,
+        Employee $employee
+    ) {
+        $validated = $request->validate([
+            'tanggal_mulai' => ['required', 'date'],
+            'tanggal_selesai' => [
+                'required',
+                'date',
+                'after_or_equal:tanggal_mulai',
+            ],
+            'nama_tambahan' => ['required', 'string', 'max:255'],
+            'nominal' => ['required', 'numeric', 'min:0'],
+            'keterangan_tambahan' => ['nullable', 'string'],
+        ]);
+
+        $period = SalaryPeriod::firstOrCreate(
+            [
+                'tanggal_mulai' => $validated['tanggal_mulai'],
+                'tanggal_selesai' => $validated['tanggal_selesai'],
+            ],
+            ['status' => 'draft']
+        );
+
+        $jenisKaryawan = strtolower(trim((string) ($employee->jenis_karyawan ?? '')));
+        $salaryDetail = SalaryDetail::firstOrCreate(
+            [
+                'salary_period_id' => $period->id,
+                'employee_id' => $employee->id,
+            ],
+            [
+                'jenis_karyawan' => $employee->jenis_karyawan,
+                'tarif_harian' => $this->employeeDailyRateAt(
+                    $employee,
+                    $validated['tanggal_mulai']
+                ),
+                'tarif_jam' => $jenisKaryawan === 'borongan'
+                    ? $this->salarySetting('borongan_per_jam', 18000)
+                    : 0,
+                'tarif_lembur_biasa' => $this->salarySetting('lembur_biasa_per_jam', 18500),
+                'tarif_lembur_libur' => $this->salarySetting('lembur_libur_per_jam', 37000),
+                'tarif_uang_makan' => $this->salarySetting('uang_makan_per_3_jam', 11000),
+                'jam_istirahat' => 1,
+            ]
+        );
+
+        $salaryDetail->additions()->create([
+            'nama_tambahan' => $validated['nama_tambahan'],
+            'nominal' => $validated['nominal'],
+            'keterangan' => $validated['keterangan_tambahan'] ?? null,
+        ]);
+
+        $this->syncTotalPotongan($salaryDetail);
+
+        return redirect()
+            ->route(
+                'salary.detail',
+                array_merge(
+                    ['employee' => $employee->id],
+                    $this->filterParams($request)
+                )
+            )
+            ->with('success', 'Nominal tambahan berhasil ditambahkan.');
+    }
+
+    public function updateAddition(
+        Request $request,
+        Employee $employee,
+        SalaryAddition $addition
+    ) {
+        $validated = $request->validate([
+            'tanggal_mulai' => ['required', 'date'],
+            'tanggal_selesai' => [
+                'required',
+                'date',
+                'after_or_equal:tanggal_mulai',
+            ],
+            'nama_tambahan' => ['required', 'string', 'max:255'],
+            'nominal' => ['required', 'numeric', 'min:0'],
+            'keterangan_tambahan' => ['nullable', 'string'],
+        ]);
+
+        if (
+            !$addition->detail ||
+            $addition->detail->employee_id !== $employee->id
+        ) {
+            abort(404);
+        }
+
+        $addition->update([
+            'nama_tambahan' => $validated['nama_tambahan'],
+            'nominal' => $validated['nominal'],
+            'keterangan' => $validated['keterangan_tambahan'] ?? null,
+        ]);
+
+        $this->syncTotalPotongan($addition->detail);
+
+        return redirect()
+            ->route(
+                'salary.detail',
+                array_merge(
+                    ['employee' => $employee->id],
+                    $this->filterParams($request)
+                )
+            )
+            ->with('success', 'Nominal tambahan berhasil diperbarui.');
+    }
+
+    public function destroyAddition(
+        Request $request,
+        Employee $employee,
+        SalaryAddition $addition
+    ) {
+        if (
+            !$addition->detail ||
+            $addition->detail->employee_id !== $employee->id
+        ) {
+            abort(404);
+        }
+
+        $salaryDetail = $addition->detail;
+        $addition->delete();
+        $this->syncTotalPotongan($salaryDetail);
+
+        return redirect()
+            ->route(
+                'salary.detail',
+                array_merge(
+                    ['employee' => $employee->id],
+                    $this->filterParams($request)
+                )
+            )
+            ->with('success', 'Nominal tambahan berhasil dihapus.');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | SYNC TOTAL POTONGAN
@@ -1797,13 +2075,18 @@ return view(
         $totalPotongan = $salaryDetail
             ->deductions()
             ->sum('nominal');
+        $totalTambahan = $salaryDetail
+            ->additions()
+            ->sum('nominal');
 
         $salaryDetail->update([
             'total_potongan' => $totalPotongan,
+            'total_tambahan' => $totalTambahan,
 
             'gaji_bersih' => max(
                 (float) $salaryDetail->gaji_kotor
-                - $totalPotongan,
+                - $totalPotongan
+                + $totalTambahan,
                 0
             ),
         ]);
@@ -1871,6 +2154,30 @@ private function salarySetting(string $key, float $default): float
     return $value > 0 ? $value : $default;
 }
 
+private function sumDailyMealAllowance($attendance): float
+{
+    return collect($attendance)
+        ->groupBy(fn ($day) => substr((string) data_get($day, 'tanggal', ''), 0, 10))
+        ->sum(fn ($days) => $days->max(
+            fn ($day) => (float) data_get($day, 'uang_makan_lembur', 0)
+        ));
+}
+
+private function employeeDailyRateAt(Employee $employee, string $date): float
+{
+    $jenisKaryawan = strtolower(trim((string) $employee->jenis_karyawan));
+
+    if ($jenisKaryawan === 'harian') {
+        return $this->salarySetting('harian_per_hari', 127855);
+    }
+
+    if ($jenisKaryawan === 'bulanan') {
+        return EmployeeSalaryRate::amountForEmployeeAt($employee->id, $date) ?? 0;
+    }
+
+    return 0;
+}
+
 private function getWorkSchedule(
     int $employeeId,
     string $tanggal
@@ -1891,14 +2198,14 @@ private function getWorkSchedule(
         return $jadwalKhusus->workSchedule;
     }
 
-    // Prioritas 2: jadwal harian berdasarkan unit penempatan dan tanggal.
-    if (empty($employee->penempatan)) {
+    // Prioritas 2: jadwal harian berdasarkan bagian dan tanggal.
+    if (empty($employee->bagian)) {
         return null;
     }
 
     return DailyWorkSchedule::with('workSchedule')
         ->whereDate('tanggal', $tanggal)
-        ->where('penempatan', $employee->penempatan)
+        ->where('bagian', $employee->bagian)
         ->first()?->workSchedule;
 }
 
@@ -2110,7 +2417,27 @@ public function archive(
                         })
                         ->values()
                         ->all();
-                }    
+                }
+
+                $rincianNominalTambahan = $salaryDetail
+                    ? $salaryDetail
+                        ->additions()
+                        ->orderBy('id')
+                        ->get([
+                            'nama_tambahan',
+                            'nominal',
+                            'keterangan',
+                        ])
+                        ->map(function ($tambahan) {
+                            return [
+                                'nama_tambahan' => $tambahan->nama_tambahan,
+                                'nominal' => (float) $tambahan->nominal,
+                                'keterangan' => $tambahan->keterangan,
+                            ];
+                        })
+                        ->values()
+                        ->all()
+                    : [];
 
                 SalaryArchiveDetail::create([
                     'salary_archive_id' => $archive->id,
@@ -2133,7 +2460,9 @@ public function archive(
                     'uang_makan_lembur' => $row['uang_makan_lembur'],
 
                     'total_potongan' => $row['total_potongan'],
+                    'total_tambahan' => $row['total_tambahan'],
                     'rincian_potongan' => $rincianPotongan,
+                    'rincian_nominal_tambahan' => $rincianNominalTambahan,
 
                     'gaji_kotor' => $row['gaji_kotor'],
                     'gaji_bersih' => $row['gaji_bersih'],
@@ -2142,6 +2471,7 @@ public function archive(
                         ->map(function ($day) {
                             return [
                                 'tanggal' => $day['tanggal'] ?? null,
+                                'jam_istirahat' => (float) ($day['jam_istirahat'] ?? 0),
                                 'jam_kerja' => (float) ($day['jam_kerja'] ?? 0),
                                 'jam_lembur' => (float) ($day['jam_lembur'] ?? 0),
                                 'jam_lembur_biasa' => (float) ($day['jam_lembur_biasa'] ?? 0),
@@ -2216,9 +2546,10 @@ public function toggleBpjs(Request $request, Employee $employee)
 
     if (!$detail->exists) {
         $detail->jenis_karyawan = $employee->jenis_karyawan;
-        $detail->tarif_harian = $jenisKaryawan === 'harian'
-            ? 127855
-            : 0;
+        $detail->tarif_harian = $this->employeeDailyRateAt(
+            $employee,
+            $data['tanggal_mulai']
+        );
         $detail->tarif_jam = $jenisKaryawan === 'borongan'
             ? 18000
             : 0;

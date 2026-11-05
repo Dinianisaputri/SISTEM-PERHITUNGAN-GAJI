@@ -39,20 +39,13 @@
             <table class="min-w-full text-left text-sm text-slate-700">
                 <thead><tr class="border-b border-slate-200 bg-slate-50 text-slate-600">
                     <th class="px-3 py-3">No.</th><th class="px-3 py-3">Nama Penempatan</th>
-                    <th class="px-3 py-3">Status</th><th class="px-3 py-3">Aksi</th>
+                    <th class="px-3 py-3">Aksi</th>
                 </tr></thead>
                 <tbody>
                 @forelse($data as $item)
                     <tr class="border-b border-slate-100 hover:bg-slate-50/80">
                         <td class="px-3 py-3">{{ $data->firstItem() + $loop->index }}</td>
                         <td class="px-3 py-3 font-medium text-slate-800">{{ $item->nama }}</td>
-                        <td class="px-3 py-3">
-                            @if($item->is_active)
-                                <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs text-emerald-700">Aktif</span>
-                            @else
-                                <span class="rounded-full bg-slate-200 px-2.5 py-1 text-xs text-slate-600">Nonaktif</span>
-                            @endif
-                        </td>
                         <td class="px-3 py-3">
                             <div class="flex flex-wrap gap-2">
                                 <form action="{{ route('master-data.penempatan.update', $item) }}" method="POST" class="flex flex-wrap gap-2">
@@ -61,17 +54,17 @@
                                            class="w-40 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs">
                                     <button class="rounded-lg bg-amber-100 px-2.5 py-1.5 text-xs text-amber-700" type="submit">Simpan</button>
                                 </form>
-                                <form action="{{ route('master-data.penempatan.toggle', $item) }}" method="POST" onsubmit="return confirm('Ubah status penempatan ini?')">
-                                    @csrf @method('PATCH')
-                                    <button class="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs text-slate-700" type="submit">
-                                        {{ $item->is_active ? 'Nonaktifkan' : 'Aktifkan' }}
+                                <form action="{{ route('master-data.penempatan.destroy', $item) }}" method="POST" onsubmit="return confirm('Hapus penempatan ini?')">
+                                    @csrf @method('DELETE')
+                                    <button class="rounded-lg bg-rose-100 px-2.5 py-1.5 text-xs text-rose-700" type="submit">
+                                        Hapus
                                     </button>
                                 </form>
                             </div>
                         </td>
                     </tr>
                 @empty
-                    <tr><td colspan="4" class="px-3 py-10 text-center text-slate-500">Belum ada data penempatan.</td></tr>
+                    <tr><td colspan="3" class="px-3 py-10 text-center text-slate-500">Belum ada data penempatan.</td></tr>
                 @endforelse
                 </tbody>
             </table>

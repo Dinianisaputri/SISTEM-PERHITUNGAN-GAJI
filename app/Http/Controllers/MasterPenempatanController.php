@@ -2,6 +2,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\MasterPenempatan;
+use App\Models\DailyWorkSchedule;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -39,12 +41,19 @@ class MasterPenempatanController extends Controller
         return back()->with('success', 'Penempatan berhasil diperbarui.');
     }
 
-    public function toggle(MasterPenempatan $masterPenempatan)
+    public function destroy(MasterPenempatan $masterPenempatan)
     {
-        $masterPenempatan->update([
-            'is_active' => !$masterPenempatan->is_active,
-        ]);
+        $isUsed = Employee::where('penempatan', $masterPenempatan->nama)->exists()
+            || DailyWorkSchedule::where('penempatan', $masterPenempatan->nama)->exists();
 
-        return back()->with('success', 'Status penempatan berhasil diubah.');
+        if ($isUsed) {
+            return back()->withErrors([
+                'delete' => 'Penempatan masih digunakan pada data karyawan atau jadwal kerja harian, sehingga tidak dapat dihapus.',
+            ]);
+        }
+
+        $masterPenempatan->delete();
+
+        return back()->with('success', 'Penempatan berhasil dihapus.');
     }
 }

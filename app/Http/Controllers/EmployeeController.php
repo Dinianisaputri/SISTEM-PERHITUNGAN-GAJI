@@ -20,7 +20,6 @@ class EmployeeController extends Controller
 private function jabatanList()
 {
     return DB::table('master_jabatans')
-        ->where('is_active', true)
         ->orderBy('nama')
         ->pluck('nama')
         ->toArray();
@@ -28,7 +27,6 @@ private function jabatanList()
 private function bagianList()
 {
     return DB::table('master_bagians')
-        ->where('is_active', true)
         ->orderBy('nama')
         ->pluck('nama')
         ->toArray();
@@ -36,7 +34,6 @@ private function bagianList()
 private function penempatanList()
 {
     return DB::table('master_penempatans')
-        ->where('is_active', true)
         ->orderBy('nama')
         ->pluck('nama')
         ->toArray();
