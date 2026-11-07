@@ -15,6 +15,30 @@ use App\Models\SalarySetting;
 class SalaryCalculationService
 
 {
+    public function applyLateArrivalTolerance(
+        Carbon $actualClockIn,
+        ?string $scheduledClockIn
+    ): Carbon {
+        if (!$scheduledClockIn) {
+            return $actualClockIn;
+        }
+
+        $scheduled = Carbon::parse(
+            $actualClockIn->toDateString() . ' ' . Carbon::parse($scheduledClockIn)->format('H:i:s'),
+            $actualClockIn->timezone
+        );
+        $lateMinutes = $scheduled->diffInMinutes($actualClockIn, false);
+
+        if ($lateMinutes < -720) {
+            $scheduled->subDay();
+            $lateMinutes = $scheduled->diffInMinutes($actualClockIn, false);
+        }
+
+        return $lateMinutes >= 0 && $lateMinutes <= 10
+            ? $scheduled
+            : $actualClockIn;
+    }
+
 
     /**
      * Ambil tarif terkini dari pengaturan database.
@@ -23,6 +47,21 @@ class SalaryCalculationService
     private function tarif(string $key, float $default): float
     {
         return SalarySetting::value($key, $default);
+    }
+
+    public function roundMinutesToWholeHours(int $minutes): int
+    {
+        $minutes = max($minutes, 0);
+        $wholeHours = intdiv($minutes, 60);
+
+        return $wholeHours + ($minutes % 60 >= 45 ? 1 : 0);
+    }
+
+    public function roundHoursToWhole(float $hours): int
+    {
+        return $this->roundMinutesToWholeHours(
+            (int) floor(max($hours, 0) * 60)
+        );
     }
 
     /*
@@ -41,7 +80,8 @@ class SalaryCalculationService
 
     | - Jam kerja sudah dikurangi istirahat
 
-    | - Jika jam kerja bersih >= 10 jam, mendapat uang makan 1 kali
+    | - Jam dibulatkan ke atas jika sisa menit mencapai 45 menit.
+    | - Uang makan diberikan mulai 11 jam kerja bersih.
 
     | - Borongan tidak menggunakan lembur biasa/libur
     - untuk karyawan yang mempunyai data tarif BPJS maka dikurangi tarif
@@ -114,7 +154,8 @@ class SalaryCalculationService
 
          */
 
-        $jamBruto = $masuk->diffInMinutes($pulang) / 60;
+        $menitBruto = (int) $masuk->diffInMinutes($pulang);
+        $jamBruto = $this->roundMinutesToWholeHours($menitBruto);
 
         /*
 
@@ -122,12 +163,9 @@ class SalaryCalculationService
 
          */
 
-        $jamKerja = max(
-
-            $jamBruto - $jamIstirahat,
-
-            0
-
+        $menitIstirahat = (int) round($jamIstirahat * 60);
+        $jamKerja = $this->roundMinutesToWholeHours(
+            max($menitBruto - $menitIstirahat, 0)
         );
 
         /*
@@ -144,13 +182,12 @@ class SalaryCalculationService
 
          *
 
-         * Jika jam kerja bersih >= 10 jam,
-
-         * mendapatkan uang makan 1 kali.
+         * Jam kerja sudah dibulatkan dengan aturan 45 menit.
+         * Uang makan mulai dibayarkan saat jam kerja bersih mencapai 11 jam.
 
          */
 
-        $uangMakan = $jamKerja >= 10
+        $uangMakan = $jamKerja >= 11
 
             ? $this->tarif('uang_makan_per_3_jam', 11000)
 
@@ -177,11 +214,8 @@ class SalaryCalculationService
             ),
 
             'jam_kerja' => round(
-
                 $jamKerja,
-
-                2
-
+                0
             ),
 
             'gaji_pokok' => round(
@@ -349,11 +383,8 @@ class SalaryCalculationService
         if ($isDapur) {
 
             $jamNormal = min(
-
-                $jamKerja,
-
+                $this->roundHoursToWhole($jamKerja),
                 8
-
             );
 
             $gajiPokok = $tarifHarian;
@@ -426,13 +457,7 @@ class SalaryCalculationService
 
         if ($isHoliday) {
 
-            $jamLembur = max(
-
-                $jamKerja,
-
-                0
-
-            );
+            $jamLembur = $this->roundHoursToWhole($jamKerja);
 
             $jamLemburBiasa = 0;
 
@@ -456,17 +481,16 @@ class SalaryCalculationService
 
              *
 
-             * Uang makan diberikan maksimal satu kali per hari jika ada lembur.
+             * Uang makan diberikan satu kali jika lembur hari libur mencapai 3 jam.
 
              *
 
              * Contoh:
-
-             * Ada lembur -> 1
+             * Lembur >= 3 jam -> 1
 
              */
 
-            $uangMakan = $jamLemburLibur > 0
+            $uangMakan = $jamLemburLibur >= 3
                 ? $this->tarif('uang_makan_per_3_jam', 11000)
                 : 0;
 
@@ -567,11 +591,8 @@ class SalaryCalculationService
         */
 
         $jamNormal = min(
-
-            $jamKerja,
-
+            $this->roundHoursToWhole($jamKerja),
             8
-
         );
 
         /*
@@ -615,9 +636,7 @@ class SalaryCalculationService
             $menitLembur = (int) round(max($jamKerja - 8, 0) * 60);
         }
 
-        $jamUtuh = intdiv($menitLembur, 60);
-        $sisaMenit = $menitLembur % 60;
-        $jamLembur = $jamUtuh + ($sisaMenit >= 45 ? 1 : 0);
+        $jamLembur = $this->roundMinutesToWholeHours($menitLembur);
 
         $jamLemburBiasa = $jamLembur;
 
@@ -645,13 +664,13 @@ class SalaryCalculationService
 
         |
 
-        | Uang makan diberikan maksimal satu kali per hari jika ada lembur.
+        | Uang makan diberikan satu kali jika lembur mencapai 3 jam.
 
         |
 
         */
 
-        $uangMakan = $jamLemburBiasa > 0
+        $uangMakan = $jamLemburBiasa >= 3
             ? $this->tarif('uang_makan_per_3_jam', 11000)
             : 0;
 
@@ -712,11 +731,8 @@ class SalaryCalculationService
             ),
 
             'jam_lembur_biasa' => round(
-
                 $jamLemburBiasa,
-
-                2
-
+                0
             ),
 
             'jam_lembur_libur' => 0,
@@ -944,11 +960,8 @@ class SalaryCalculationService
             ),
 
             'jam_lembur_libur' => round(
-
                 $jamLemburLibur,
-
-                2
-
+                0
             ),
 
             'gaji_pokok' => round(

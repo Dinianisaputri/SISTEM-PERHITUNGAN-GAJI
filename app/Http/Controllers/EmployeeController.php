@@ -39,6 +39,14 @@ private function penempatanList()
         ->toArray();
 }
 
+private function listIncludingCurrent(array $options, ?string $current): array
+{
+    return array_values(array_unique(array_filter(
+        array_merge($options, [$current]),
+        fn ($item) => $item !== null && $item !== ''
+    )));
+}
+
 private function syncBpjsRegistrationFlags(array &$validated): void
 {
     $validated['bpjs_tk_terdaftar'] =
@@ -700,18 +708,36 @@ public function getRegions(Request $request)
 
     public function edit(Employee $employee)
 {
-    $bagianList = $this->bagianList();
-    $jabatanList = $this->jabatanList();
-   $penempatanList = array_values(array_unique(array_filter(
-    array_merge(
-        $this->penempatanList(),
-        [$employee->penempatan]
-    ),
-    fn ($item) => $item !== null && $item !== ''
-)));
-    $provinsiList = Region::where('level', 'provinsi')
-        ->orderBy('nama')
-        ->get();
+    $bagianList = $this->listIncludingCurrent($this->bagianList(), $employee->bagian);
+    $jabatanList = $this->listIncludingCurrent($this->jabatanList(), $employee->jabatan);
+    $penempatanList = $this->listIncludingCurrent($this->penempatanList(), $employee->penempatan);
+        $jenisKaryawanList = $this->listIncludingCurrent(
+            ['Borongan', 'Bulanan', 'Harian'],
+            $employee->jenis_karyawan
+        );
+        $pendidikanList = $this->listIncludingCurrent(
+            ['SD', 'SMP', 'SMA/SMK', 'D1', 'D2', 'D3', 'D4', 'S1', 'S2', 'S3'],
+            $employee->pendidikan
+        );
+        $statusPernikahanList = $this->listIncludingCurrent(
+            ['Belum Menikah', 'Sudah Menikah'],
+            $employee->status_pernikahan
+        );
+        $jenisKelaminList = $this->listIncludingCurrent(
+            ['Laki-laki', 'Perempuan'],
+            $employee->jenis_kelamin
+        );
+        $programBpjsTkList = $this->listIncludingCurrent(
+            ['Full Program', '2 Program'],
+            $employee->program_bpjs_tk
+        );
+        $kelasBpjsKesehatanList = $this->listIncludingCurrent(
+            ['Kelas 1', 'Kelas 2'],
+            $employee->kelas_bpjs_kesehatan
+        );
+        $provinsiList = Region::where('level', 'provinsi')
+            ->orderBy('nama')
+            ->get();
     $kabupatenList = collect();
     $kecamatanList = collect();
     $desaList = collect();
@@ -740,6 +766,12 @@ public function getRegions(Request $request)
             'bagianList',
             'jabatanList',
             'penempatanList',
+            'jenisKaryawanList',
+            'pendidikanList',
+            'statusPernikahanList',
+            'jenisKelaminList',
+            'programBpjsTkList',
+            'kelasBpjsKesehatanList',
             'provinsiList',
             'kabupatenList',
             'kecamatanList',
@@ -783,13 +815,19 @@ public function getRegions(Request $request)
 'no_bpjs_tk' => ['nullable', 'string', 'max:50'],
 'program_bpjs_tk' => [
     'nullable',
-    Rule::in(['Full Program', '2 Program']),
+    Rule::in($this->listIncludingCurrent(
+        ['Full Program', '2 Program'],
+        $employee->program_bpjs_tk
+    )),
 ],
 
 'no_bpjs_kesehatan' => ['nullable', 'string', 'max:50'],
 'kelas_bpjs_kesehatan' => [
     'nullable',
-    Rule::in(['Kelas 1', 'Kelas 2']),
+    Rule::in($this->listIncludingCurrent(
+        ['Kelas 1', 'Kelas 2'],
+        $employee->kelas_bpjs_kesehatan
+    )),
 ],
             'no_induk_karyawan' => [
                 'nullable',
@@ -814,6 +852,7 @@ public function getRegions(Request $request)
             |--------------------------------------------------------------------------
             | BAGIAN
             |--------------------------------------------------------------------------
+            */
        'bagian' => [
     'required',
     'string',
@@ -841,19 +880,20 @@ public function getRegions(Request $request)
         [$employee->penempatan]
     )))),
 ],
+            /*
             |--------------------------------------------------------------------------
             | JENIS KARYAWAN
             |--------------------------------------------------------------------------
             */
-'jenis_karyawan' => [
+            'jenis_karyawan' => [
     'nullable',
     'string',
     'max:50',
-    Rule::in([
+    Rule::in($this->listIncludingCurrent([
         'Borongan',
         'Bulanan',
         'Harian',
-    ]),
+    ], $employee->jenis_karyawan)),
 ],
             /*
             |--------------------------------------------------------------------------
@@ -872,10 +912,10 @@ public function getRegions(Request $request)
             */
             'status_pernikahan' => [
                 'nullable',
-                Rule::in([
+                Rule::in($this->listIncludingCurrent([
                     'Belum Menikah',
                     'Sudah Menikah',
-                ]),
+                ], $employee->status_pernikahan)),
             ],
             /*
             |--------------------------------------------------------------------------
@@ -884,10 +924,10 @@ public function getRegions(Request $request)
             */
             'jenis_kelamin' => [
                 'nullable',
-                Rule::in([
+                Rule::in($this->listIncludingCurrent([
                     'Laki-laki',
                     'Perempuan',
-                ]),
+                ], $employee->jenis_kelamin)),
             ],
             /*
             |--------------------------------------------------------------------------

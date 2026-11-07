@@ -12,6 +12,10 @@
 
     $isHarian = $jenis === 'harian';
 
+    $jamBulat = fn ($value) => app(
+        \App\Services\SalaryCalculationService::class
+    )->roundHoursToWhole((float) ($value ?? 0));
+
 $potonganAwal = (float) ($detail->total_potongan ?? 0);
 
 $potonganTambahan = (float) ($detail->potongan_tambahan ?? 0);
@@ -230,7 +234,7 @@ $gajiBersih = $gajiKotor - $potonganAwal - $potonganTambahan;
 
                             <p class="mt-2 text-2xl font-bold text-slate-900">
 
-                                {{ number_format((float) $detail->jam_kerja, 2, ',', '.') }}
+                                {{ number_format($jamBulat($detail->jam_kerja), 0, ',', '.') }}
 
                                 <span class="text-xs font-medium text-slate-400">jam</span>
 
@@ -248,7 +252,7 @@ $gajiBersih = $gajiKotor - $potonganAwal - $potonganTambahan;
 
                             <p class="mt-2 text-xl font-bold text-slate-900">
 
-                                {{ number_format((float) $detail->jam_lembur_biasa, 2, ',', '.') }}
+                                {{ number_format($jamBulat($detail->jam_lembur_biasa), 0, ',', '.') }}
 
                                 <span class="text-xs text-slate-400">jam</span>
 
@@ -266,7 +270,7 @@ $gajiBersih = $gajiKotor - $potonganAwal - $potonganTambahan;
 
                             <p class="mt-2 text-xl font-bold text-orange-600">
 
-                                {{ number_format((float) $detail->jam_lembur_libur, 2, ',', '.') }}
+                                {{ number_format($jamBulat($detail->jam_lembur_libur), 0, ',', '.') }}
 
                                 <span class="text-xs text-slate-400">jam</span>
 
@@ -382,7 +386,7 @@ $gajiBersih = $gajiKotor - $potonganAwal - $potonganTambahan;
 
                                 <p class="text-[10px] text-slate-400">
 
-                                    {{ number_format((float) $detail->jam_lembur, 2, ',', '.') }} jam
+                                    {{ number_format($jamBulat($detail->jam_lembur), 0, ',', '.') }} jam
 
                                 </p>
 

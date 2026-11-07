@@ -4,6 +4,11 @@
 @section('title', 'Detail Arsip Gaji')
 
 @section('content')
+@php
+    $jamBulat = fn ($value) => app(
+        \App\Services\SalaryCalculationService::class
+    )->roundHoursToWhole((float) ($value ?? 0));
+@endphp
 <div class="space-y-6">
 
     {{-- HEADER --}}
@@ -129,7 +134,7 @@
                             </td>
 
                             <td class="px-4 py-3">
-                                {{ number_format((float) ($detail->jam_kerja ?? 0), 2, ',', '.') }}
+                                {{ number_format($jamBulat($detail->jam_kerja), 0, ',', '.') }}
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-3">
@@ -202,7 +207,7 @@
                             </td>
 
                             <td class="px-4 py-3">
-                                {{ $checklog->total_jam_kerja ?? 0 }} jam
+                                {{ $jamBulat($checklog->total_jam_kerja ?? 0) }} jam
                             </td>
 
                             <td class="whitespace-nowrap px-4 py-3">

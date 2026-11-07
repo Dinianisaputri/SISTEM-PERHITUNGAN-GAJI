@@ -65,6 +65,10 @@
             margin: 3px 0;
         }
 
+        .party-description {
+            margin-bottom: 30px;
+        }
+
         
 .tanggal {
     margin-top: 14px;
@@ -76,7 +80,7 @@
 .ttd {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 0;
+    margin-top: 63px;
     page-break-inside: avoid;
 }
 
@@ -85,6 +89,10 @@
     text-align: center;
     vertical-align: top;
     padding: 0;
+}
+
+.ttd .tanggal-ttd {
+    padding-bottom: 4px;
 }
 
 .ttd .ruang-ttd {
@@ -192,7 +200,7 @@
     </tr>
 </table>
 
-<p>
+<p class="party-description">
     Dalam hal ini bertindak untuk dan atas nama dirinya sendiri yang
     selanjutnya disebut sebagai PIHAK KEDUA.
 </p>
@@ -323,11 +331,11 @@
 </p>
 
 
-<p class="tanggal">
-    {{ $tanggalTandaTangan }}
-</p>
-
 <table class="ttd">
+    <tr>
+        <td class="tanggal-ttd">Lamongan, {{ $tanggalTandaTangan }}</td>
+        <td></td>
+    </tr>
     <tr>
         <td>Pihak Pertama,</td>
         <td>Pihak Kedua,</td>

@@ -382,7 +382,7 @@
     @if($jenisBelumDitentukan)
         <span class="text-gray-400">-</span>
     @else
-        {{ number_format($data['jam_kerja'], 2, ',', '.') }}
+        {{ number_format($data['jam_kerja'], 0, ',', '.') }}
         jam
     @endif
 </td>
@@ -394,7 +394,7 @@
         <span class="text-gray-400">-</span>
     @else
         <span class="text-gray-700">
-            {{ number_format($data['jam_lembur'], 2, ',', '.') }}
+            {{ number_format($data['jam_lembur'], 0, ',', '.') }}
             jam
         </span>
     @endif

@@ -288,7 +288,7 @@ $jamIstirahat = $isBorongan
                             </p>
 
                             <p class="mt-2 text-2xl font-bold text-slate-900">
-                                {{ number_format($jamKerja, 2, ',', '.') }}
+                                {{ number_format($jamKerja, 0, ',', '.') }}
 
                                 <span class="text-xs font-medium text-slate-400">
                                     jam
@@ -308,7 +308,7 @@ $jamIstirahat = $isBorongan
                                 </p>
 
                                 <p class="mt-2 text-2xl font-bold text-slate-900">
-                                    {{ number_format($jamLemburBiasa, 2, ',', '.') }}
+                                    {{ number_format($jamLemburBiasa, 0, ',', '.') }}
 
                                     <span class="text-xs font-medium text-slate-400">
                                         jam
@@ -326,7 +326,7 @@ $jamIstirahat = $isBorongan
                                 </p>
 
                                 <p class="mt-2 text-2xl font-bold text-orange-600">
-                                    {{ number_format($jamLemburLibur, 2, ',', '.') }}
+                                    {{ number_format($jamLemburLibur, 0, ',', '.') }}
 
                                     <span class="text-xs font-medium text-slate-400">
                                         jam
@@ -425,6 +425,10 @@ $jamIstirahat = $isBorongan
                                         Kerja
                                     </th>
 
+                                    <th class="px-4 py-2.5 text-right font-medium">
+                                        Pendapatan Harian
+                                    </th>
+
                                     @if(!$isBorongan)
 
                                         <th class="px-4 py-2.5 text-right font-medium">
@@ -475,6 +479,10 @@ $jamIstirahat = $isBorongan
                                         $rowUangMakan = (float) (
                                             $row['uang_makan_lembur'] ?? 0
                                         );
+
+                                        $rowPendapatanHarian = (float) (
+                                            $row['pendapatan_harian'] ?? 0
+                                        );
                                     @endphp
 
                                     <tr class="hover:bg-gray-50">
@@ -522,13 +530,12 @@ $jamIstirahat = $isBorongan
                                         {{-- KERJA --}}
                                         <td class="px-4 py-2.5 text-right text-gray-700">
 
-                                            {{ number_format(
-                                                $rowJamKerja,
-                                                2,
-                                                ',',
-                                                '.'
-                                            ) }}
+                                            {{ number_format($rowJamKerja, 0, ',', '.') }}
 
+                                        </td>
+
+                                        <td class="whitespace-nowrap px-4 py-2.5 text-right font-medium text-slate-800">
+                                            Rp {{ number_format($rowPendapatanHarian, 0, ',', '.') }}
                                         </td>
 
                                         @if($isBorongan)
@@ -577,7 +584,7 @@ $jamIstirahat = $isBorongan
 
                                                         {{ number_format(
                                                             $rowLemburBiasa,
-                                                            2,
+                                                            0,
                                                             ',',
                                                             '.'
                                                         ) }}
@@ -604,7 +611,7 @@ $jamIstirahat = $isBorongan
 
                                                         {{ number_format(
                                                             $rowLemburLibur,
-                                                            2,
+                                                            0,
                                                             ',',
                                                             '.'
                                                         ) }}
@@ -658,7 +665,7 @@ $jamIstirahat = $isBorongan
                                     <tr>
 
                                         <td
-                                            colspan="7"
+                                            colspan="8"
                                             class="px-4 py-8 text-center text-gray-400"
                                         >
                                             Belum ada data absensi.
@@ -673,6 +680,10 @@ $jamIstirahat = $isBorongan
                         </table>
 
                     </div>
+
+                    <p class="mt-2 text-xs text-gray-400">
+                        Pendapatan harian mencakup gaji pokok, lembur, dan uang makan; potongan atau tambahan dihitung pada total periode.
+                    </p>
 
                 </div>
 
@@ -743,7 +754,7 @@ $jamIstirahat = $isBorongan
                                     <p class="text-[10px] text-gray-400">
                                         {{ number_format(
                                             $jamLemburBiasa,
-                                            2,
+                                            0,
                                             ',',
                                             '.'
                                         ) }}
@@ -779,7 +790,7 @@ $jamIstirahat = $isBorongan
                                     <p class="text-[10px] text-gray-400">
                                         {{ number_format(
                                             $jamLemburLibur,
-                                            2,
+                                            0,
                                             ',',
                                             '.'
                                         ) }}

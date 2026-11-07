@@ -108,6 +108,43 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, true);
 
+    document.querySelectorAll('[data-bulk-delete-form]').forEach((form) => {
+        const selectAll = form.querySelector('[data-bulk-select-all]');
+        const selections = Array.from(form.querySelectorAll('[data-bulk-select]'));
+        const deleteButton = form.querySelector('[data-bulk-delete-button]');
+        const selectionCount = form.querySelector('[data-bulk-selection-count]');
+
+        const updateSelectionState = () => {
+            const selectedCount = selections.filter((checkbox) => checkbox.checked).length;
+
+            if (deleteButton) {
+                deleteButton.disabled = selectedCount === 0;
+            }
+
+            if (selectionCount) {
+                selectionCount.textContent = String(selectedCount);
+            }
+
+            if (selectAll) {
+                selectAll.checked = selections.length > 0 && selectedCount === selections.length;
+                selectAll.indeterminate = selectedCount > 0 && selectedCount < selections.length;
+            }
+        };
+
+        selectAll?.addEventListener('change', () => {
+            selections.forEach((checkbox) => {
+                checkbox.checked = selectAll.checked;
+            });
+            updateSelectionState();
+        });
+
+        selections.forEach((checkbox) => {
+            checkbox.addEventListener('change', updateSelectionState);
+        });
+
+        updateSelectionState();
+    });
+
     const themeToggles = document.querySelectorAll('[data-theme-toggle]');
 
     const updateThemeControls = () => {

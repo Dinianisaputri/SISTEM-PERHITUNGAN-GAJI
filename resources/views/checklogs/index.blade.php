@@ -4,6 +4,12 @@
 
 @section('content')
 
+@php
+    $jamBulat = fn ($value) => app(
+        \App\Services\SalaryCalculationService::class
+    )->roundHoursToWhole((float) ($value ?? 0));
+@endphp
+
 <div class="space-y-6">
 
     {{-- HEADER --}}
@@ -429,12 +435,7 @@
 
                                     <td class="whitespace-nowrap px-4 py-3 text-slate-700">
 
-                                        {{ number_format(
-                                            (float) $checklog->total_jam_kerja,
-                                            2,
-                                            ',',
-                                            '.'
-                                        ) }}
+                                        {{ number_format($jamBulat($checklog->total_jam_kerja), 0, ',', '.') }}
 
                                         jam
 

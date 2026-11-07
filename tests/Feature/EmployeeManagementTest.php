@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Employee;
+use App\Models\MasterBagian;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,119 @@ it('renders the employee edit page with the modern HR form', function () {
     $response->assertSee('Edit Karyawan');
     $response->assertSee('Data Identitas');
     $response->assertSee('Surat Kontrak');
+});
+
+it('saves a newly added master bagian when updating an employee', function () {
+    $user = User::factory()->create();
+    seedEmployeeMasterOptions();
+    MasterBagian::create(['nama' => 'Bagian Baru']);
+    DB::table('master_penempatans')->insert([
+        'nama' => 'Unit Uji',
+        'is_active' => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $employee = Employee::create([
+        'name' => 'Karyawan Uji Update',
+        'bagian' => 'Fish Meal',
+        'jabatan' => 'Operator',
+        'penempatan' => 'Unit Uji',
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('employees.edit', $employee))
+        ->assertOk()
+        ->assertSee('Bagian Baru');
+
+    $this->put(route('employees.update', $employee), [
+        'name' => $employee->name,
+        'bagian' => 'Bagian Baru',
+        'jabatan' => '',
+        'penempatan' => 'Unit Uji',
+        'is_active' => '1',
+        'jumlah_sp' => '0',
+    ])->assertRedirect(route('employees.index'))
+        ->assertSessionHas('success', 'Data karyawan berhasil diperbarui.')
+        ->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('employees', [
+        'id' => $employee->id,
+        'bagian' => 'Bagian Baru',
+        'jabatan' => null,
+    ]);
+});
+
+it('preserves existing employee select values when they are missing from current options', function () {
+    $user = User::factory()->create();
+    seedEmployeeMasterOptions();
+    $employee = Employee::create([
+        'name' => 'Karyawan Data Lama',
+        'bagian' => 'Bagian Lama',
+        'jabatan' => 'Jabatan Lama',
+        'penempatan' => 'Unit Lama',
+        'jenis_karyawan' => 'Kontrak Lama',
+        'pendidikan' => 'Paket C',
+        'status_pernikahan' => 'Menikah',
+        'jenis_kelamin' => 'Pria',
+        'program_bpjs_tk' => 'Program Lama',
+        'no_bpjs_tk' => 'TK-123',
+        'kelas_bpjs_kesehatan' => 'Kelas 3',
+        'no_bpjs_kesehatan' => 'KES-123',
+    ]);
+
+    $response = $this->actingAs($user)
+        ->get(route('employees.edit', $employee))
+        ->assertOk();
+
+    foreach ([
+        'Bagian Lama',
+        'Jabatan Lama',
+        'Unit Lama',
+        'Kontrak Lama',
+        'Paket C',
+        'Menikah',
+        'Pria',
+        'Program Lama',
+        'Kelas 3',
+    ] as $existingValue) {
+        expect($response->getContent())
+            ->toMatch('/<option\s+value="' . preg_quote($existingValue, '/') . '"\s+selected\s*>/');
+    }
+
+    $this->put(route('employees.update', $employee), [
+        'name' => 'Karyawan Data Lama Diperbarui',
+        'bagian' => 'Bagian Lama',
+        'jabatan' => 'Jabatan Lama',
+        'penempatan' => 'Unit Lama',
+        'jenis_karyawan' => 'Kontrak Lama',
+        'pendidikan' => 'Paket C',
+        'status_pernikahan' => 'Menikah',
+        'jenis_kelamin' => 'Pria',
+        'program_bpjs_tk' => 'Program Lama',
+        'no_bpjs_tk' => 'TK-123',
+        'kelas_bpjs_kesehatan' => 'Kelas 3',
+        'no_bpjs_kesehatan' => 'KES-123',
+        'is_active' => '1',
+        'jumlah_sp' => '0',
+    ])->assertRedirect(route('employees.index'))
+        ->assertSessionHasNoErrors();
+
+    $this->assertDatabaseHas('employees', [
+        'id' => $employee->id,
+        'name' => 'Karyawan Data Lama Diperbarui',
+        'bagian' => 'Bagian Lama',
+        'jabatan' => 'Jabatan Lama',
+        'penempatan' => 'Unit Lama',
+        'jenis_karyawan' => 'Kontrak Lama',
+        'pendidikan' => 'Paket C',
+        'status_pernikahan' => 'Menikah',
+        'jenis_kelamin' => 'Pria',
+        'program_bpjs_tk' => 'Program Lama',
+        'no_bpjs_tk' => 'TK-123',
+        'kelas_bpjs_kesehatan' => 'Kelas 3',
+        'no_bpjs_kesehatan' => 'KES-123',
+    ]);
 });
 
 it('creates an employee with the full profile fields including passport photo', function () {
@@ -139,7 +253,6 @@ it('accepts harian as a valid employee type and shows it in the filter options',
         'name' => 'Karyawan Harian',
         'bagian' => 'Fish Meal',
         'no_induk_karyawan' => '1171',
-        'jabatan' => 'Operator',
         'jenis_karyawan' => 'Harian',
         'is_active' => true,
         'jumlah_sp' => 0,
@@ -149,5 +262,6 @@ it('accepts harian as a valid employee type and shows it in the filter options',
     $this->assertDatabaseHas('employees', [
         'name' => 'Karyawan Harian',
         'jenis_karyawan' => 'Harian',
+        'jabatan' => null,
     ]);
 });

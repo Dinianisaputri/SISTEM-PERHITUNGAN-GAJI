@@ -68,56 +68,90 @@
                 </a>
             </form>
 
-            <div class="overflow-x-auto rounded-lg bg-white shadow">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-sm">Tanggal</th>
-                            <th class="px-4 py-3 text-left text-sm">Bagian</th>
-                            <th class="px-4 py-3 text-left text-sm">Kode Jadwal</th>
-                            <th class="px-4 py-3 text-left text-sm">Jam Kerja</th>
-                            <th class="px-4 py-3 text-left text-sm">Keterangan</th>
-                            <th class="px-4 py-3 text-left text-sm">Aksi</th>
-                        </tr>
-                    </thead>
+            <form method="POST"
+                  action="{{ route('daily-work-schedules.bulk-destroy', request()->only(['tanggal', 'bagian'])) }}"
+                  data-bulk-delete-form
+                  onsubmit="return confirm('Yakin ingin menghapus jadwal yang dipilih?')">
+                @csrf
+                @method('DELETE')
 
-                    <tbody class="divide-y divide-gray-200">
-                        @forelse ($dailySchedules as $item)
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-sm text-gray-600" aria-live="polite">
+                        <span data-bulk-selection-count>0</span> jadwal dipilih
+                    </p>
+                    <button type="submit"
+                            data-bulk-delete-button
+                            disabled
+                            class="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50">
+                        Hapus yang dipilih
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto rounded-lg bg-white shadow">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
                             <tr>
-                                <td class="px-4 py-3">
-                                    {{ $item->tanggal->format('d-m-Y') }}
-                                </td>
-                                <td class="px-4 py-3">{{ $item->bagian ?: 'Belum dipetakan' }}</td>
-                                <td class="px-4 py-3 font-medium">
-                                    {{ $item->workSchedule->kode ?? 'Jadwal tidak ditemukan' }}
-                                </td>
-                                <td class="px-4 py-3">
-                                    @if ($item->workSchedule)
-                                        {{ substr($item->workSchedule->jam_masuk, 0, 5) }}
-                                        –
-                                        {{ substr($item->workSchedule->jam_pulang, 0, 5) }}
-                                    @else
-                                        -
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3">{{ $item->keterangan ?: '-' }}</td>
-                                <td class="px-4 py-3">
-                                    <a href="{{ route('daily-work-schedules.edit', $item) }}"
-                                       class="text-indigo-600 hover:underline">
-                                        Edit
-                                    </a>
-                                </td>
+                                <th class="px-4 py-3 text-left text-sm">
+                                    <input type="checkbox"
+                                           data-bulk-select-all
+                                           aria-label="Pilih semua jadwal di halaman ini"
+                                           class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                </th>
+                                <th class="px-4 py-3 text-left text-sm">Tanggal</th>
+                                <th class="px-4 py-3 text-left text-sm">Bagian</th>
+                                <th class="px-4 py-3 text-left text-sm">Kode Jadwal</th>
+                                <th class="px-4 py-3 text-left text-sm">Jam Kerja</th>
+                                <th class="px-4 py-3 text-left text-sm">Keterangan</th>
+                                <th class="px-4 py-3 text-left text-sm">Aksi</th>
                             </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-4 py-6 text-center text-gray-500">
-                                    Belum ada jadwal untuk filter yang dipilih.
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+
+                        <tbody class="divide-y divide-gray-200">
+                            @forelse ($dailySchedules as $item)
+                                <tr>
+                                    <td class="px-4 py-3">
+                                        <input type="checkbox"
+                                               name="daily_schedule_ids[]"
+                                               value="{{ $item->id }}"
+                                               data-bulk-select
+                                               aria-label="Pilih jadwal {{ $item->tanggal->format('d-m-Y') }} bagian {{ $item->bagian }}"
+                                               class="rounded border-gray-300 text-red-600 focus:ring-red-500">
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        {{ $item->tanggal->format('d-m-Y') }}
+                                    </td>
+                                    <td class="px-4 py-3">{{ $item->bagian ?: 'Belum dipetakan' }}</td>
+                                    <td class="px-4 py-3 font-medium">
+                                        {{ $item->workSchedule->kode ?? 'Jadwal tidak ditemukan' }}
+                                    </td>
+                                    <td class="px-4 py-3">
+                                        @if ($item->workSchedule)
+                                            {{ substr($item->workSchedule->jam_masuk, 0, 5) }}
+                                            –
+                                            {{ substr($item->workSchedule->jam_pulang, 0, 5) }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3">{{ $item->keterangan ?: '-' }}</td>
+                                    <td class="px-4 py-3">
+                                        <a href="{{ route('daily-work-schedules.edit', $item) }}"
+                                           class="text-indigo-600 hover:underline">
+                                            Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="7" class="px-4 py-6 text-center text-gray-500">
+                                        Belum ada jadwal untuk filter yang dipilih.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </form>
 
             <div class="mt-4">
                 {{ $dailySchedules->links() }}

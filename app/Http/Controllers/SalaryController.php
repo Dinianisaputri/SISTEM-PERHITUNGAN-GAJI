@@ -357,6 +357,10 @@ class SalaryController extends Controller
 
                     $jamMasukJadwal = $schedule?->jam_masuk;
                     $jamPulangJadwal = $schedule?->jam_pulang;
+                    $jamMasukUntukHitung = $salaryService->applyLateArrivalTolerance(
+                        $jamMasuk,
+                        $jamMasukJadwal
+                    );
 
                             /*
                             |--------------------------------------------------------------------------
@@ -426,7 +430,7 @@ class SalaryController extends Controller
                             */
 
                             $jamBruto =
-                                $jamMasuk->diffInMinutes(
+                                $jamMasukUntukHitung->diffInMinutes(
                                     $jamPulang
                                 ) / 60;
 
@@ -454,9 +458,9 @@ class SalaryController extends Controller
                                     'jam_pulang' => $jamPulang->format('H:i:s'),
                                     'jam_masuk_jadwal' => $jamMasukJadwal,
                                     'jam_pulang_jadwal' => $jamPulangJadwal,
-                                    'jam_bruto' => round($jamBruto, 2),
+                                    'jam_bruto' => $salaryService->roundHoursToWhole($jamBruto),
                                     'jam_istirahat' => $jamIstirahatHarian,
-                                    'jam_kerja' => round($jamKerja, 2),
+                                    'jam_kerja' => $salaryService->roundHoursToWhole($jamKerja),
                                     'jam_lembur' => 0,
                                     'jam_lembur_biasa' => 0,
                                     'jam_lembur_libur' => 0,
@@ -475,7 +479,7 @@ class SalaryController extends Controller
                             |
                             | Tidak menggunakan lembur.
                             |
-                            | Jika jam kerja aktual >= 10 jam:
+                            | Uang makan mulai diberikan setelah jam kerja bersih mencapai 11 jam.
                             | uang makan 1 kali pada hari tersebut.
                             |
                             */
@@ -483,7 +487,7 @@ class SalaryController extends Controller
                             if ($isBorongan) {
                                 $hasil = $salaryService
                                     ->calculateBorongan(
-                                        $jamMasuk->format('H:i:s'),
+                                        $jamMasukUntukHitung->format('H:i:s'),
                                         $jamPulang->format('H:i:s'),
                                         $jamIstirahatHarian,
                                         $tarifJam
@@ -538,9 +542,9 @@ class SalaryController extends Controller
                                 'jam_pulang' => $jamPulang->format('H:i:s'),
                                 'jam_masuk_jadwal' => $jamMasukJadwal,
                                 'jam_pulang_jadwal' => $jamPulangJadwal,
-                                'jam_bruto' => round($jamBruto, 2),
+                                'jam_bruto' => $salaryService->roundHoursToWhole($jamBruto),
                                 'jam_istirahat' => $jamIstirahatHarian,
-                                'jam_kerja' => round($jamKerja, 2),
+                                'jam_kerja' => $salaryService->roundHoursToWhole($jamKerja),
                                 'jam_lembur' => $hasil['jam_lembur'],
                                 'jam_lembur_biasa' => $hasil['jam_lembur_biasa'],
                                 'jam_lembur_libur' => $hasil['jam_lembur_libur'],
@@ -597,6 +601,7 @@ class SalaryController extends Controller
                 $dailyAttendance = $dailyAttendance
                     ->sortBy('tanggal')
                     ->values();
+                $dailyAttendance = $this->appendDailyEarnings($dailyAttendance);
 
                 /*
                 |--------------------------------------------------------------------------
@@ -614,25 +619,13 @@ class SalaryController extends Controller
                     })
                     ->count();
 
-                $jamKerja = round(
-                    $dailyAttendance->sum('jam_kerja'),
-                    2
-                );
+                $jamKerja = (int) $dailyAttendance->sum('jam_kerja');
 
-                $jamLembur = round(
-                    $dailyAttendance->sum('jam_lembur'),
-                    2
-                );
+                $jamLembur = (int) $dailyAttendance->sum('jam_lembur');
 
-                $jamLemburBiasa = round(
-                    $dailyAttendance->sum('jam_lembur_biasa'),
-                    2
-                );
+                $jamLemburBiasa = (int) $dailyAttendance->sum('jam_lembur_biasa');
 
-                $jamLemburLibur = round(
-                    $dailyAttendance->sum('jam_lembur_libur'),
-                    2
-                );
+                $jamLemburLibur = (int) $dailyAttendance->sum('jam_lembur_libur');
 
                 /*
                 |--------------------------------------------------------------------------
@@ -1001,6 +994,10 @@ class SalaryController extends Controller
                     );
                     $jamMasukJadwal = $schedule?->jam_masuk;
                     $jamPulangJadwal = $schedule?->jam_pulang;
+                    $jamMasukUntukHitung = $salaryService->applyLateArrivalTolerance(
+                        $jamMasuk,
+                        $jamMasukJadwal
+                    );
 
                     /*
                     |--------------------------------------------------------------------------
@@ -1036,6 +1033,7 @@ class SalaryController extends Controller
                             'uang_makan_lembur' => 0,
                             'jumlah_scan' => $dayLogs->count(),
                             'is_holiday' => $isHoliday,
+                            'jam_kerja_aktual' => 0,
                             'logs' => $dayLogs,
                         ];
                     }
@@ -1071,7 +1069,7 @@ class SalaryController extends Controller
                     */
 
                     $jamBruto =
-                        $jamMasuk->diffInMinutes(
+                        $jamMasukUntukHitung->diffInMinutes(
                             $jamPulang
                         ) / 60;
 
@@ -1099,9 +1097,9 @@ class SalaryController extends Controller
                             'jam_pulang' => $jamPulang->format('H:i:s'),
                             'jam_masuk_jadwal' => $jamMasukJadwal,
                             'jam_pulang_jadwal' => $jamPulangJadwal,
-                            'jam_bruto' => round($jamBruto, 2),
+                            'jam_bruto' => $salaryService->roundHoursToWhole($jamBruto),
                             'jam_istirahat' => $jamIstirahatHarian,
-                            'jam_kerja' => round($jamKerja, 2),
+                            'jam_kerja' => $salaryService->roundHoursToWhole($jamKerja),
                             'jam_lembur' => 0,
                             'jam_lembur_biasa' => 0,
                             'jam_lembur_libur' => 0,
@@ -1110,6 +1108,7 @@ class SalaryController extends Controller
                             'uang_makan_lembur' => 0,
                             'jumlah_scan' => $dayLogs->count(),
                             'is_holiday' => $isHoliday,
+                            'jam_kerja_aktual' => $jamKerja,
                             'logs' => $dayLogs,
                         ];
                     }
@@ -1123,7 +1122,7 @@ class SalaryController extends Controller
                     if ($isBorongan) {
                         $hasil = $salaryService
                             ->calculateBorongan(
-                                $jamMasuk->format('H:i:s'),
+                                $jamMasukUntukHitung->format('H:i:s'),
                                 $jamPulang->format('H:i:s'),
                                 $jamIstirahatHarian,
                                 $tarifJam
@@ -1146,6 +1145,7 @@ class SalaryController extends Controller
                             'uang_makan_lembur' => $hasil['uang_makan_lembur'],
                             'jumlah_scan' => $dayLogs->count(),
                             'is_holiday' => $isHoliday,
+                            'jam_kerja_aktual' => $jamKerja,
                             'logs' => $dayLogs,
                         ];
                     }
@@ -1173,9 +1173,9 @@ class SalaryController extends Controller
                         'jam_pulang' => $jamPulang->format('H:i:s'),
                         'jam_masuk_jadwal' => $jamMasukJadwal,
                         'jam_pulang_jadwal' => $jamPulangJadwal,
-                        'jam_bruto' => round($jamBruto, 2),
+                        'jam_bruto' => $salaryService->roundHoursToWhole($jamBruto),
                         'jam_istirahat' => $jamIstirahatHarian,
-                        'jam_kerja' => round($jamKerja, 2),
+                        'jam_kerja' => $salaryService->roundHoursToWhole($jamKerja),
                         'jam_lembur' => $hasil['jam_lembur'],
                         'jam_lembur_biasa' => $hasil['jam_lembur_biasa'],
                         'jam_lembur_libur' => $hasil['jam_lembur_libur'],
@@ -1184,6 +1184,7 @@ class SalaryController extends Controller
                         'uang_makan_lembur' => $hasil['uang_makan_lembur'],
                         'jumlah_scan' => $dayLogs->count(),
                         'is_holiday' => $isHoliday,
+                        'jam_kerja_aktual' => $jamKerja,
                         'logs' => $dayLogs,
                     ];
                 }
@@ -1235,6 +1236,7 @@ class SalaryController extends Controller
         $attendance = $attendance
             ->sortBy('tanggal')
             ->values();
+        $attendance = $this->appendDailyEarnings($attendance);
 
         /*
         |--------------------------------------------------------------------------
@@ -1245,29 +1247,17 @@ class SalaryController extends Controller
         $hariHadir = $attendance
             ->filter(function ($day) {
                 return !empty($day['jam_pulang'])
-                    && ($day['jam_kerja'] ?? 0) > 0;
+                    && ($day['jam_kerja_aktual'] ?? $day['jam_kerja'] ?? 0) > 0;
             })
             ->count();
 
-        $jamKerja = round(
-            $attendance->sum('jam_kerja'),
-            2
-        );
+        $jamKerja = (int) $attendance->sum('jam_kerja');
 
-        $jamLembur = round(
-            $attendance->sum('jam_lembur'),
-            2
-        );
+        $jamLembur = (int) $attendance->sum('jam_lembur');
 
-        $jamLemburBiasa = round(
-            $attendance->sum('jam_lembur_biasa'),
-            2
-        );
+        $jamLemburBiasa = (int) $attendance->sum('jam_lembur_biasa');
 
-        $jamLemburLibur = round(
-            $attendance->sum('jam_lembur_libur'),
-            2
-        );
+        $jamLemburLibur = (int) $attendance->sum('jam_lembur_libur');
 
         /*
         |--------------------------------------------------------------------------
@@ -2163,6 +2153,20 @@ private function sumDailyMealAllowance($attendance): float
         ));
 }
 
+private function appendDailyEarnings($attendance)
+{
+    return collect($attendance)->map(function (array $day) {
+        $day['pendapatan_harian'] = round(
+            (float) ($day['gaji_pokok'] ?? 0)
+                + (float) ($day['total_lembur'] ?? 0)
+                + (float) ($day['uang_makan_lembur'] ?? 0),
+            2
+        );
+
+        return $day;
+    });
+}
+
 private function employeeDailyRateAt(Employee $employee, string $date): float
 {
     $jenisKaryawan = strtolower(trim((string) $employee->jenis_karyawan));
@@ -2479,6 +2483,7 @@ public function archive(
                                 'gaji_pokok' => (float) ($day['gaji_pokok'] ?? 0),
                                 'total_lembur' => (float) ($day['total_lembur'] ?? 0),
                                 'uang_makan_lembur' => (float) ($day['uang_makan_lembur'] ?? 0),
+                                'pendapatan_harian' => (float) ($day['pendapatan_harian'] ?? 0),
                             ];
                         })
                         ->values()

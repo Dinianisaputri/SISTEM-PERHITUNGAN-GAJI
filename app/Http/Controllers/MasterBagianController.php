@@ -5,10 +5,19 @@ use App\Models\MasterBagian;
 use App\Models\DailyWorkSchedule;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class MasterBagianController extends Controller
 {
+    private const BAGIAN_REFERENCE_TABLES = [
+        'employees',
+        'borongan_employees',
+        'daily_work_schedules',
+        'contracts',
+        'salary_archive_details',
+    ];
+
     public function index()
     {
         $data = MasterBagian::orderBy('nama')->paginate(20);
@@ -36,15 +45,35 @@ class MasterBagianController extends Controller
             ],
         ]);
 
-        $masterBagian->update($validated);
+        DB::transaction(function () use ($masterBagian, $validated) {
+            $namaLama = $masterBagian->nama;
+            $namaBaru = $validated['nama'];
+
+            $masterBagian->update($validated);
+
+            foreach (self::BAGIAN_REFERENCE_TABLES as $table) {
+                DB::table($table)
+                    ->where('bagian', $namaLama)
+                    ->update([
+                        'bagian' => $namaBaru,
+                        'updated_at' => now(),
+                    ]);
+            }
+        });
 
         return back()->with('success', 'Bagian berhasil diperbarui.');
     }
 
     public function destroy(MasterBagian $masterBagian)
     {
-        $isUsed = Employee::where('bagian', $masterBagian->nama)->exists()
-            || DailyWorkSchedule::where('bagian', $masterBagian->nama)->exists();
+        $isUsed = false;
+
+        foreach (self::BAGIAN_REFERENCE_TABLES as $table) {
+            if (DB::table($table)->where('bagian', $masterBagian->nama)->exists()) {
+                $isUsed = true;
+                break;
+            }
+        }
 
         if ($isUsed) {
             return back()->withErrors([

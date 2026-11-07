@@ -188,4 +188,35 @@ class DailyWorkScheduleController extends Controller
             ->route('daily-work-schedules.index')
             ->with('success', 'Jadwal kerja harian berhasil diperbarui.');
     }
+
+    /**
+     * Hapus jadwal yang dipilih dari daftar.
+     */
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'daily_schedule_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'daily_schedule_ids.*' => [
+                'required',
+                'integer',
+                'distinct',
+                Rule::exists('daily_work_schedules', 'id'),
+            ],
+        ], [
+            'daily_schedule_ids.required' => 'Pilih setidaknya satu jadwal untuk dihapus.',
+            'daily_schedule_ids.min' => 'Pilih setidaknya satu jadwal untuk dihapus.',
+            'daily_schedule_ids.max' => 'Maksimal 100 jadwal dapat dihapus sekaligus.',
+        ]);
+
+        $deletedCount = DailyWorkSchedule::query()
+            ->whereIn('id', $validated['daily_schedule_ids'])
+            ->delete();
+
+        return redirect()
+            ->route('daily-work-schedules.index', array_filter(
+                $request->only(['tanggal', 'bagian']),
+                fn ($value) => $value !== null && $value !== ''
+            ))
+            ->with('success', "{$deletedCount} jadwal kerja harian berhasil dihapus.");
+    }
 }

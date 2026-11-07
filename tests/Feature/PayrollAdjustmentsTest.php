@@ -100,8 +100,122 @@ it('assigns daily schedules by bagian and applies daily borongan break overrides
         ->toBe(2.0);
     $detailResponse->assertSee('08:00 - 18:00');
     $detailResponse->assertSee('value="2.00"', false);
-    $detailResponse->assertSee('8,00');
+    expect((float) $detailResponse->viewData('attendance')->first()['jam_kerja'])
+        ->toBe(8.0);
+    expect((float) $detailResponse->viewData('attendance')->first()['pendapatan_harian'])
+        ->toBe(144000.0);
+    $detailResponse->assertSee('Pendapatan Harian');
     $detailResponse->assertSee('Rp 144.000');
+});
+
+it('applies ten-minute clock-in tolerance to borongan calculations in payroll and detail', function () {
+    $user = User::factory()->create();
+    MasterBagian::create(['nama' => 'Produksi', 'is_active' => true]);
+    $workSchedule = WorkSchedule::create([
+        'kode' => 'P1',
+        'nama' => 'Shift Produksi',
+        'jam_masuk' => '08:00',
+        'jam_pulang' => '18:00',
+        'is_active' => true,
+    ]);
+    DailyWorkSchedule::create([
+        'tanggal' => '2026-01-06',
+        'bagian' => 'Produksi',
+        'work_schedule_id' => $workSchedule->id,
+    ]);
+
+    $withinTolerance = Employee::create([
+        'fingerprint_pin' => '7011',
+        'name' => 'Borongan Toleransi',
+        'bagian' => 'Produksi',
+        'jenis_karyawan' => 'Borongan',
+        'is_active' => true,
+    ]);
+    $outsideTolerance = Employee::create([
+        'fingerprint_pin' => '7012',
+        'name' => 'Borongan Lewat Toleransi',
+        'bagian' => 'Produksi',
+        'jenis_karyawan' => 'Borongan',
+        'is_active' => true,
+    ]);
+    foreach ([
+        ['pin' => '7011', 'masuk' => '08:10:00', 'pulang' => '17:54:00', 'hash' => 'c'],
+        ['pin' => '7012', 'masuk' => '08:11:00', 'pulang' => '17:55:00', 'hash' => 'd'],
+    ] as $attendance) {
+        foreach (['masuk', 'pulang'] as $type) {
+            $hash = hash('sha256', $attendance['hash'] . $type);
+            DB::table('attendance_logs')->insert([
+                'device_sn' => 'DEVICE-1',
+                'pin' => $attendance['pin'],
+                'punched_at' => '2026-01-06 ' . $attendance[$type],
+                'event_hash' => $hash,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+    }
+
+    $period = [
+        'tanggal_mulai' => '2026-01-06',
+        'tanggal_selesai' => '2026-01-06',
+    ];
+
+    $payrollResponse = $this->actingAs($user)->get(route('salary.index', $period));
+    $payrollResponse->assertOk();
+    $salaryRows = $payrollResponse->viewData('salaryEmployees')->keyBy(
+        fn ($row) => $row['employee']->id
+    );
+
+    expect((float) $salaryRows[$withinTolerance->id]['attendance']->first()['jam_kerja'])
+        ->toBe(9.0)
+        ->and((float) $salaryRows[$outsideTolerance->id]['attendance']->first()['jam_kerja'])
+        ->toBe(8.0);
+    expect($salaryRows[$withinTolerance->id]['attendance']->first()['jam_masuk'])
+        ->toBe('08:10:00');
+
+    $detailResponse = $this->actingAs($user)->get(
+        route('salary.detail', ['employee' => $withinTolerance->id] + $period)
+    );
+    $detailResponse->assertOk();
+    expect((float) $detailResponse->viewData('attendance')->first()['jam_kerja'])
+        ->toBe(9.0);
+});
+
+it('allows selecting and deleting daily work schedules in bulk', function () {
+    $user = User::factory()->create();
+    $workSchedule = WorkSchedule::create([
+        'kode' => 'D2',
+        'nama' => 'Shift Dapur',
+        'jam_masuk' => '08:00',
+        'jam_pulang' => '18:00',
+        'is_active' => true,
+    ]);
+    $firstSchedule = DailyWorkSchedule::create([
+        'tanggal' => '2026-01-05',
+        'bagian' => 'Dapur',
+        'work_schedule_id' => $workSchedule->id,
+    ]);
+    $secondSchedule = DailyWorkSchedule::create([
+        'tanggal' => '2026-01-06',
+        'bagian' => 'Dapur',
+        'work_schedule_id' => $workSchedule->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('daily-work-schedules.index'))
+        ->assertOk()
+        ->assertSee('data-bulk-select-all', false)
+        ->assertSee('data-bulk-select', false)
+        ->assertSee('Hapus yang dipilih');
+
+    $this->delete(route('daily-work-schedules.bulk-destroy', ['tanggal' => '2026-01-05']), [
+        'daily_schedule_ids' => [$firstSchedule->id],
+    ])
+        ->assertRedirect(route('daily-work-schedules.index', ['tanggal' => '2026-01-05']))
+        ->assertSessionHas('success', '1 jadwal kerja harian berhasil dihapus.');
+
+    $this->assertDatabaseMissing('daily_work_schedules', ['id' => $firstSchedule->id]);
+    $this->assertDatabaseHas('daily_work_schedules', ['id' => $secondSchedule->id]);
 });
 
 it('stores payroll additions and includes them in the net salary', function () {
@@ -262,7 +376,7 @@ it('keeps individual monthly employee rates by effective date and snapshots them
     $this->assertDatabaseMissing('employee_salary_rates', ['id' => $secondRate->id]);
 });
 
-it('pays one daily meal allowance for any overtime duration', function () {
+it('pays one daily meal allowance when regular overtime reaches three hours', function () {
     $calculator = app(SalaryCalculationService::class);
     $schedule = (object) ['jam_pulang' => '16:00:00'];
 
@@ -283,6 +397,24 @@ it('pays one daily meal allowance for any overtime duration', function () {
         $schedule,
         '2026-01-05',
         '17:00:00'
+    );
+    $twoHoursOvertime = $calculator->calculateHarianBulanan(
+        127855,
+        10,
+        false,
+        false,
+        $schedule,
+        '2026-01-05',
+        '18:00:00'
+    );
+    $threeHoursOvertime = $calculator->calculateHarianBulanan(
+        127855,
+        10.75,
+        false,
+        false,
+        $schedule,
+        '2026-01-05',
+        '18:45:00'
     );
     $fortyFourMinutesOvertime = $calculator->calculateHarianBulanan(
         127855,
@@ -322,16 +454,19 @@ it('pays one daily meal allowance for any overtime duration', function () {
     );
 
     expect((float) $noOvertime['uang_makan_lembur'])->toBe(0.0);
-    expect((float) $oneHourOvertime['uang_makan_lembur'])->toBe(11000.0);
+    expect((float) $oneHourOvertime['uang_makan_lembur'])->toBe(0.0);
+    expect((float) $twoHoursOvertime['uang_makan_lembur'])->toBe(0.0);
     expect((float) $fortyFourMinutesOvertime['jam_lembur'])->toBe(0.0);
     expect((float) $fortyFourMinutesOvertime['uang_makan_lembur'])->toBe(0.0);
     expect((float) $fortyFiveMinutesOvertime['jam_lembur'])->toBe(1.0);
-    expect((float) $fortyFiveMinutesOvertime['uang_makan_lembur'])->toBe(11000.0);
+    expect((float) $fortyFiveMinutesOvertime['uang_makan_lembur'])->toBe(0.0);
+    expect((float) $threeHoursOvertime['jam_lembur'])->toBe(3.0);
+    expect((float) $threeHoursOvertime['uang_makan_lembur'])->toBe(11000.0);
     expect((float) $fiveHours['uang_makan_lembur'])->toBe(11000.0);
     expect((float) $sevenHours['uang_makan_lembur'])->toBe(11000.0);
 });
 
-it('pays one daily meal allowance for any holiday overtime', function () {
+it('pays one daily meal allowance when holiday overtime reaches three hours', function () {
     $calculator = app(SalaryCalculationService::class);
 
     $noOvertime = $calculator->calculateHarianBulanan(
@@ -339,14 +474,34 @@ it('pays one daily meal allowance for any holiday overtime', function () {
         0,
         true
     );
-    $oneHourOvertime = $calculator->calculateHarianBulanan(
+    $twoHoursOvertime = $calculator->calculateHarianBulanan(
         127855,
-        1,
+        2,
+        true
+    );
+    $threeHoursOvertime = $calculator->calculateHarianBulanan(
+        127855,
+        3,
         true
     );
 
     expect((float) $noOvertime['uang_makan_lembur'])->toBe(0.0);
-    expect((float) $oneHourOvertime['uang_makan_lembur'])->toBe(11000.0);
+    expect((float) $twoHoursOvertime['uang_makan_lembur'])->toBe(0.0);
+    expect((float) $threeHoursOvertime['uang_makan_lembur'])->toBe(11000.0);
+});
+
+it('pays borongan meal allowance once from the eleventh net work hour', function () {
+    $calculator = app(SalaryCalculationService::class);
+
+    $beforeEleventhHour = $calculator->calculateBorongan('07:00:00', '17:59:00', 1, 10000);
+    $tenNetHours = $calculator->calculateBorongan('07:00:00', '18:00:00', 1, 10000);
+    $elevenNetHours = $calculator->calculateBorongan('07:00:00', '19:00:00', 1, 10000);
+
+    expect((float) $beforeEleventhHour['uang_makan_lembur'])->toBe(0.0);
+    expect((float) $tenNetHours['jam_kerja'])->toBe(10.0);
+    expect((float) $tenNetHours['uang_makan_lembur'])->toBe(0.0);
+    expect((float) $elevenNetHours['jam_kerja'])->toBe(11.0);
+    expect((float) $elevenNetHours['uang_makan_lembur'])->toBe(11000.0);
 });
 
 it('counts at most one meal allowance per date in payroll totals', function () {

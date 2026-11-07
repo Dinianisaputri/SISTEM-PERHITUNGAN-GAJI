@@ -74,7 +74,7 @@
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
-        margin-top: 0;
+        margin-top: 63px;
     }
 
     .signatures td {
@@ -84,6 +84,14 @@
         padding: 0 3px;
         font-size: 9pt;
         line-height: 1.4;
+    }
+
+    .party-description {
+        margin-bottom: 30px;
+    }
+
+    .signature-date {
+        padding-bottom: 4px !important;
     }
 
     .signature-space {
@@ -170,7 +178,7 @@
     </tr>
 </table>
 
-<p>
+<p class="party-description">
     Dalam hal ini bertindak untuk dan atas nama dirinya sendiri
     yang selanjutnya disebut sebagai PIHAK KEDUA.
 </p>
@@ -307,13 +315,13 @@
     kekuatan hukum.
 </p>
 
-<p style="margin-top: 22px;">
-    Dibuat di: Lamongan<br>
-    Pada tanggal:
-    {{ \Carbon\Carbon::parse($contract->tanggal_mulai)->translatedFormat('l, d F Y') }}
-</p>
-
 <table class="signatures">
+    <tr>
+        <td class="signature-date">
+            Lamongan, {{ \Carbon\Carbon::parse($contract->tanggal_mulai)->locale('id')->translatedFormat('d F Y') }}
+        </td>
+        <td></td>
+    </tr>
     <tr>
         <td>Pihak Pertama,</td>
         <td>Pihak Kedua,</td>

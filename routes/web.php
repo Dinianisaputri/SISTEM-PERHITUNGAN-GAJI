@@ -91,6 +91,11 @@ Route::middleware('auth')->group(function () {
     Route::resource('daily-work-schedules', DailyWorkScheduleController::class)
         ->except(['show', 'destroy']);
 
+    Route::delete(
+        '/daily-work-schedules/bulk-destroy',
+        [DailyWorkScheduleController::class, 'bulkDestroy']
+    )->name('daily-work-schedules.bulk-destroy');
+
     Route::post(
         '/gaji-karyawan/import-jadwal',
         [EmployeeWorkScheduleImportController::class, 'store']

@@ -374,17 +374,9 @@
 
     );
 
-    $jam = fn ($value) => number_format(
-
-        (float) ($value ?? 0),
-
-        2,
-
-        ',',
-
-        '.'
-
-    );
+    $jam = fn ($value) => app(
+        \App\Services\SalaryCalculationService::class
+    )->roundHoursToWhole((float) ($value ?? 0));
 
     $periode = ($salaryArchive->start_date
 

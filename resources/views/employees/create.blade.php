@@ -118,11 +118,10 @@
                 {{-- Jabatan --}}
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-1">
-                        Jabatan
+                        Jabatan (opsional)
                     </label>
                    <select
                         name="jabatan"
-                        required
                         class="w-full rounded-lg border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                     >
                         <option value="">Pilih Jabatan</option>

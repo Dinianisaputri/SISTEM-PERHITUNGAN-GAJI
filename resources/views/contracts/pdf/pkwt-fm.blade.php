@@ -67,6 +67,10 @@
             text-align: justify;
         }
 
+        .party-description {
+            margin-bottom: 30px;
+        }
+
         .page-break {
             page-break-before: always;
         }
@@ -79,13 +83,17 @@
         .ttd {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
+            margin-top: 63px;
             text-align: center;
         }
 
         .ttd td {
             width: 50%;
             vertical-align: top;
+        }
+
+        .ttd .tanggal-ttd {
+            padding-bottom: 4px;
         }
 
         .ruang-ttd {
@@ -192,7 +200,7 @@
         </tr>
     </table>
 
-    <p>
+    <p class="party-description">
         Dalam hal ini bertindak untuk dan atas nama dirinya sendiri yang selanjutnya disebut
         sebagai PIHAK KEDUA.
     </p>
@@ -319,9 +327,11 @@
         2. Surat perjanjian kerja ini bermaterei cukup dan mempunyai kekuatan hukum.
     </p>
 
-    <p class="tanggal">Lamongan, {{ $tanggalTandaTangan }}</p>
-
     <table class="ttd">
+        <tr>
+            <td class="tanggal-ttd">Lamongan, {{ $tanggalTandaTangan }}</td>
+            <td></td>
+        </tr>
         <tr>
             <td>Pihak Pertama,</td>
             <td>Pihak Kedua,</td>

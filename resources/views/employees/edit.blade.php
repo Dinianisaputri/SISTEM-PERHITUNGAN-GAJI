@@ -135,11 +135,10 @@
                         {{-- JABATAN --}}
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">
-                                Jabatan
+                                Jabatan (opsional)
                             </label>
                             <select
                                 name="jabatan"
-                                required
                                 class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                             >
                                 <option value="">Pilih Jabatan</option>
@@ -208,18 +207,14 @@
                                 class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                             >
                                 <option value="">Pilih Jenis</option>
-                                <option value="Borongan"
-                                    {{ old('jenis_karyawan', $employee->jenis_karyawan) == 'Borongan' ? 'selected' : '' }}>
-                                    Borongan
-                                </option>
-                                <option value="Bulanan"
-                                    {{ old('jenis_karyawan', $employee->jenis_karyawan) == 'Bulanan' ? 'selected' : '' }}>
-                                    Bulanan
-                                </option>
-                                <option value="Harian"
-                                    {{ old('jenis_karyawan', $employee->jenis_karyawan) == 'Harian' ? 'selected' : '' }}>
-                                    Harian
-                                </option>
+                                @foreach($jenisKaryawanList as $jenisKaryawan)
+                                    <option
+                                        value="{{ $jenisKaryawan }}"
+                                        @selected(old('jenis_karyawan', $employee->jenis_karyawan) === $jenisKaryawan)
+                                    >
+                                        {{ $jenisKaryawan }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
                         {{-- PENDIDIKAN --}}
@@ -232,7 +227,7 @@
                                 class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                             >
                                 <option value="">Pilih Pendidikan</option>
-                                @foreach(['SD','SMP','SMA/SMK','D1','D2','D3','D4','S1','S2','S3'] as $item)
+                                @foreach($pendidikanList as $item)
                                     <option
                                         value="{{ $item }}"
                                         {{ old('pendidikan', $employee->pendidikan) == $item ? 'selected' : '' }}
@@ -252,14 +247,14 @@
                                 class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                             >
                                 <option value="">Pilih Status</option>
-                                <option value="Belum Menikah"
-                                    {{ old('status_pernikahan', $employee->status_pernikahan) == 'Belum Menikah' ? 'selected' : '' }}>
-                                    Belum Menikah
-                                </option>
-                                <option value="Sudah Menikah"
-                                    {{ old('status_pernikahan', $employee->status_pernikahan) == 'Sudah Menikah' ? 'selected' : '' }}>
-                                    Sudah Menikah
-                                </option>
+                                @foreach($statusPernikahanList as $statusPernikahan)
+                                    <option
+                                        value="{{ $statusPernikahan }}"
+                                        @selected(old('status_pernikahan', $employee->status_pernikahan) === $statusPernikahan)
+                                    >
+                                        {{ $statusPernikahan }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
                         {{-- JENIS KELAMIN --}}
@@ -272,14 +267,14 @@
                                 class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                             >
                                 <option value="">Pilih Jenis Kelamin</option>
-                                <option value="Laki-laki"
-                                    {{ old('jenis_kelamin', $employee->jenis_kelamin) == 'Laki-laki' ? 'selected' : '' }}>
-                                    Laki-laki
-                                </option>
-                                <option value="Perempuan"
-                                    {{ old('jenis_kelamin', $employee->jenis_kelamin) == 'Perempuan' ? 'selected' : '' }}>
-                                    Perempuan
-                                </option>
+                                @foreach($jenisKelaminList as $jenisKelamin)
+                                    <option
+                                        value="{{ $jenisKelamin }}"
+                                        @selected(old('jenis_kelamin', $employee->jenis_kelamin) === $jenisKelamin)
+                                    >
+                                        {{ $jenisKelamin }}
+                                    </option>
+                                @endforeach
                             </select>
                         </div>
                         {{-- TEMPAT LAHIR --}}
@@ -375,12 +370,14 @@
                         class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     >
                         <option value="">Pilih Program</option>
-                        <option value="Full Program" @selected(old('program_bpjs_tk', $employee->program_bpjs_tk) === 'Full Program')>
-                            Full Program
-                        </option>
-                        <option value="2 Program" @selected(old('program_bpjs_tk', $employee->program_bpjs_tk) === '2 Program')>
-                            2 Program
-                        </option>
+                        @foreach($programBpjsTkList as $program)
+                            <option
+                                value="{{ $program }}"
+                                @selected(old('program_bpjs_tk', $employee->program_bpjs_tk) === $program)
+                            >
+                                {{ $program }}
+                            </option>
+                        @endforeach
                     </select>
                     @error('program_bpjs_tk')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
@@ -434,12 +431,14 @@
                         class="w-full rounded-lg border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     >
                         <option value="">Pilih Kelas</option>
-                        <option value="Kelas 1" @selected(old('kelas_bpjs_kesehatan', $employee->kelas_bpjs_kesehatan) === 'Kelas 1')>
-                            Kelas 1
-                        </option>
-                        <option value="Kelas 2" @selected(old('kelas_bpjs_kesehatan', $employee->kelas_bpjs_kesehatan) === 'Kelas 2')>
-                            Kelas 2
-                        </option>
+                        @foreach($kelasBpjsKesehatanList as $kelas)
+                            <option
+                                value="{{ $kelas }}"
+                                @selected(old('kelas_bpjs_kesehatan', $employee->kelas_bpjs_kesehatan) === $kelas)
+                            >
+                                {{ $kelas }}
+                            </option>
+                        @endforeach
                     </select>
                     @error('kelas_bpjs_kesehatan')
                         <p class="mt-1 text-xs text-red-600">{{ $message }}</p>
